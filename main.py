@@ -7,6 +7,7 @@ import argparse
 organization = 'github.com'
 projectAbsP  = None
 projectName  = None
+gitPath      = None
 
 class Model():
     '''
@@ -63,6 +64,15 @@ class Model():
         @return String
         '''
         return ''
+
+class Git(Model):
+    def render(self, data):
+        global gitPath
+        for line in os.popen('cd %s && git init && git remote add -m master origin %s && git fetch origin && git checkout origin/master && git checkout master' % (projectAbsP, gitPath)):
+            print(line)
+
+    def name(self):
+        return 'git'
 
 class Base():
     def checkDependents(self, models):
@@ -462,7 +472,7 @@ def joinMap(m1, m2):
     raise Exception("Not dict.", m1, m2)
 
 def main():
-    global projectAbsP, projectName, organization
+    global projectAbsP, projectName, organization, gitPath
     parser = argparse.ArgumentParser()
 
     parser.add_argument('project', help='project name')
@@ -470,6 +480,7 @@ def main():
     parser.add_argument('-o', '--organization', help='Reset organization. Default is `github.com`', metavar='')
     parser.add_argument("--go_path", help='Choose go path. Default use your path value.')
     parser.add_argument("--grpc", help='Create GRPC model.', action='store_true')
+    parser.add_argument("--git", help='Add remote git.', metavar='')
 
     # 解析参数步骤
     args = parser.parse_args()
@@ -495,6 +506,10 @@ def main():
     models = ([] if args.base == 'disable' else [Base()])
     if args.grpc:
         models.append(Grpc())
+
+    if args.git:
+        gitPath = args.git
+        models.append(Git())
 
     config = {}
     for item in models:
