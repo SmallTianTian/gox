@@ -172,16 +172,19 @@ package main
 // code from auto build. 
 
 import (
-	// "net/http"
-	// _ "net/http/pprof"
+	"log"
+	"net/http"
+	_ "net/http/pprof"
 
 	"{organization}/{project}/cmd"
 )
 
 func main() {{
-	// go func() {{
-	// 	http.ListenAndServe(":8089", nil)
-	// }}()
+	go func() {{
+	    if err := http.ListenAndServe(":6060", nil); err != nil {{
+            log.Println(err)
+        }}
+	}}()
 	cmd.Execute()
 }}
 '''
