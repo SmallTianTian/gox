@@ -98,7 +98,7 @@ class Base():
         return result
 
     def _cmd(self):
-        root_content = '''// Auto generate code. Thanks ['tianxuxin@126.com']
+        root_content = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
 package cmd
 
 import (
@@ -145,7 +145,7 @@ func onInitialize() {{
 '''
         WriteContentToFile('root.go', root_content.format(
             **{'organization': organization, 'project': projectName}), 'cmd')
-        user_content = '''// Auto generate code. Thanks ['tianxuxin@126.com']
+        user_content = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
 package cmd
 
 import (
@@ -172,7 +172,7 @@ func RunBase(cmd *cobra.Command, args []string) {
         WriteContentToFile('base.go', user_content, 'cmd')
 
     def _main(self):
-        template = '''// Auto generate code. Thanks ['tianxuxin@126.com']
+        template = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
 package main
 // code from auto build. 
 
@@ -198,7 +198,7 @@ func main() {{
             **{'organization': organization, 'project': projectName}))
 
     def _logPkg(self):
-        log_template = '''// Auto generate code. Thanks ['tianxuxin@126.com']
+        log_template = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
 package logger
 
 import (
@@ -232,7 +232,7 @@ func Pre() *logrus.Entry {
 
     def _config(self, cMap):
         global projectName
-        goConfig = '''// Auto generate code. Thanks ['tianxuxin@126.com']
+        goConfig = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
 package config
 
 import (
@@ -297,7 +297,7 @@ func GetConfig() *Config {{
 
         WriteContentToFile('config.go', goConfig.format(
             **{'project': projectName, 'config': goData}), 'config')
-        yamlConfig = '''# Auto generate code. Thanks ['tianxuxin@126.com']
+        yamlConfig = '''# Auto generate code. Help should mail to ['tianxuxin@126.com']
 {}
 '''
         WriteContentToFile(
@@ -327,7 +327,7 @@ class Grpc():
         return 'Grpc'
 
     def _grpcServer(self):
-        grpcContent = '''// Auto generate code. Thanks ['tianxuxin@126.com']
+        grpcContent = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
 package server
 
 import (
@@ -418,7 +418,7 @@ func GrpcStop() {{
         content = grpcContent.format(
             **{'organization': organization, 'project': projectName})
         WriteContentToFile('grpc.go', content, 'server')
-        proxyContent = '''// Auto generate code. Thanks ['tianxuxin@126.com']
+        proxyContent = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
 package server
 
 import (
@@ -455,14 +455,14 @@ func RunProxy() error {{
             **{'organization': organization, 'project': projectName}), 'server')
 
     def _grpcFolder(self):
-        hintContent = '''// Auto generate code. Thanks ['tianxuxin@126.com']
+        hintContent = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
 package grpc
 // Write grpc code to this folder
 '''
         WriteContentToFile('root.go', hintContent, 'grpc')
 
     def _grpcMiddleware(self):
-        middlewareContent = '''// Auto generate code. Thanks ['tianxuxin@126.com']
+        middlewareContent = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
 package middleware
 
 import (
