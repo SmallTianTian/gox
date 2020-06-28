@@ -1,13 +1,14 @@
-#coding=utf-8
+# coding=utf-8
 #!/usr/bin/env python3
 import os
 import platform
 import argparse
 
 organization = 'github.com'
-projectAbsP  = None
-projectName  = None
-gitPath      = None
+projectAbsP = None
+projectName = None
+gitPath = None
+
 
 class Model():
     '''
@@ -65,6 +66,7 @@ class Model():
         '''
         return ''
 
+
 class Git(Model):
     def render(self, data):
         global gitPath
@@ -73,6 +75,7 @@ class Git(Model):
 
     def name(self):
         return 'git'
+
 
 class Base():
     def checkDependents(self, models):
@@ -90,7 +93,8 @@ class Base():
     def getParam(self):
         result = {}
         # for log config.
-        result['Base'] = {'config': {'logger':{'level': 'info', 'env': 'dev'}}}
+        result['Base'] = {'config': {
+            'logger': {'level': 'info', 'env': 'dev'}}}
         return result
 
     def _cmd(self):
@@ -139,7 +143,8 @@ func onInitialize() {{
 	logger.InitLogger(cfg.Logger.Level, cfg.Logger.Env)
 }}
 '''
-        WriteContentToFile('root.go', root_content.format(**{'organization': organization, 'project': projectName}), 'cmd')
+        WriteContentToFile('root.go', root_content.format(
+            **{'organization': organization, 'project': projectName}), 'cmd')
         user_content = '''// Auto generate code. Thanks ['tianxuxin@126.com']
 package cmd
 
@@ -189,7 +194,8 @@ func main() {{
 }}
 '''
         global organization, projectName
-        WriteContentToFile('main.go', template.format(**{'organization': organization, 'project': projectName}))
+        WriteContentToFile('main.go', template.format(
+            **{'organization': organization, 'project': projectName}))
 
     def _logPkg(self):
         log_template = '''// Auto generate code. Thanks ['tianxuxin@126.com']
@@ -272,27 +278,31 @@ func GetConfig() *Config {{
 	return &DefaultConfig
 }}
 '''
-        goData   = ''
+        goData = ''
         yamlData = ''
         if cMap['config']:
             for k in cMap['config']:
-                value   = []
+                value = []
                 maxSize = 0
                 for i in cMap['config'][k]:
                     maxSize = maxSize if len(i) <= maxSize else len(i)
                     value.append(i)
-                goData   += '\t{} struct {{\n'.format(k.capitalize())
+                goData += '\t{} struct {{\n'.format(k.capitalize())
                 yamlData += '{}:\n'.format(k)
                 for i in value:
-                    goData   += '\t\t{}{} string\n'.format(i.capitalize(), (maxSize - len(i)) * ' ')
+                    goData += '\t\t{}{} string\n'.format(
+                        i.capitalize(), (maxSize - len(i)) * ' ')
                     yamlData += '    {}: {}\n'.format(i, cMap['config'][k][i])
                 goData += '\t}\n'
 
-        WriteContentToFile('config.go', goConfig.format(**{'project': projectName, 'config': goData}), 'config')
+        WriteContentToFile('config.go', goConfig.format(
+            **{'project': projectName, 'config': goData}), 'config')
         yamlConfig = '''# Auto generate code. Thanks ['tianxuxin@126.com']
 {}
 '''
-        WriteContentToFile('config.yaml', yamlConfig.format(yamlData), 'config')
+        WriteContentToFile(
+            'config.yaml', yamlConfig.format(yamlData), 'config')
+
 
 class Grpc():
     def render(self, data):
@@ -309,7 +319,8 @@ class Grpc():
     def getParam(self):
         result = {}
         # for log config.
-        result['Base'] = {'config': {'grpc':{'port': '5001'}}}
+        result['Base'] = {'config': {
+            'grpc': {'port': '5001', 'proxy': '8080'}}}
         return result
 
     def name(self):
@@ -340,6 +351,11 @@ import (
 	"github.com/pkg/errors"
 )
 
+func registGRPC(gs *grpc.Server) {{
+    // TODO set yourself protobuf server
+    // Example: schemaPB.RegisterSchemaServiceServer(grpcServer, &schema.SchemaServer{{}})
+}}
+
 func onPanic(p interface{{}}) error {{
 	stack := stack.Callers(1)
 	logger.Pre().WithField("values", spew.Sdump(p)).WithField("stack", stack).Errorln("paniced in grpc")
@@ -363,7 +379,7 @@ var (
 func GrpcStart() error {{
 	port := config.DefaultConfig.Grpc.Port
 	// init grpc server
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {{
 		return err
 	}}
@@ -385,12 +401,11 @@ func GrpcStart() error {{
 			PermitWithoutStream: true,
 		}}),
 	)
-	// TODO set yourself protobuf server
-	// Example: schemaPB.RegisterSchemaServiceServer(grpcServer, &schema.SchemaServer{{}})
+	registGRPC(grpcServer)
 
 	// Register reflection service on gRPC server.
 	reflection.Register(grpcServer)
-	logger.Pre().Infof("GRPC server start, listen at %d\\n", port)
+	logger.Pre().Infof("GRPC server start, listen at %s\\n", port)
 	go grpcServer.Serve(lis)
 	return nil
 }}
@@ -400,10 +415,47 @@ func GrpcStop() {{
 	logger.Pre().Infoln("GRPC server stoped.")
 }}
 '''
-        WriteContentToFile('grpc.go', grpcContent.format(**{'organization': organization, 'project': projectName}), 'server')
+        content = grpcContent.format(
+            **{'organization': organization, 'project': projectName})
+        WriteContentToFile('grpc.go', content, 'server')
+        proxyContent = '''// Auto generate code. Thanks ['tianxuxin@126.com']
+package server
+
+import (
+	"fmt"
+	"net/http"
+
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"{organization}/{project}/config"
+)
+
+func registProxy(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) {{
+	// TODO set yourself proxy protobuf server. @see registGRPC(gs *grpc.Server)
+	// Example: schemaPB.RegisterSchemaServiceHandlerFromEndpoint(ctx, mux, port, opts)
+}}
+
+func RunProxy() error {{
+	port := config.DefaultConfig.Grpc.Proxy
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{{grpc.WithInsecure()}}
+
+	grpcPort := fmt.Sprintf(":%s", config.DefaultConfig.Grpc.Port)
+	registProxy(ctx, mux, grpcPort, opts)
+
+	return http.ListenAndServe(fmt.Sprintf(":%s", port), mux)
+}}
+'''
+        WriteContentToFile('proxy.go', proxyContent.format(
+            **{'organization': organization, 'project': projectName}), 'server')
 
     def _grpcFolder(self):
-        hintContent ='''// Auto generate code. Thanks ['tianxuxin@126.com']
+        hintContent = '''// Auto generate code. Thanks ['tianxuxin@126.com']
 package grpc
 // Write grpc code to this folder
 '''
@@ -437,9 +489,11 @@ func UnaryLogDurationServerInterceptor(ctx context.Context, req interface{{}}, i
 	return resp, invokeErr
 }}
 '''
-        WriteContentToFile('grpc_duration.go', middlewareContent.format(**{'organization': organization, 'project': projectName}), 'pkg/middleware')
+        WriteContentToFile('grpc_duration.go', middlewareContent.format(
+            **{'organization': organization, 'project': projectName}), 'pkg/middleware')
 
-def WriteContentToFile(fileName, content, abstractPath = None):
+
+def WriteContentToFile(fileName, content, abstractPath=None):
     global projectAbsP
     if not abstractPath:
         abstractPath = projectAbsP
@@ -453,15 +507,17 @@ def WriteContentToFile(fileName, content, abstractPath = None):
     with open(fn, 'w') as f:
         f.write(content)
 
+
 def getGoHome():
     basePath = os.environ.get('HOME', os.path.expanduser('~')) + '/go'
-    gopath   = os.environ.get('GOPATH', basePath)
+    gopath = os.environ.get('GOPATH', basePath)
     splitStr = ';' if platform.system().lower() == 'windows' else ':'
-    paths    = gopath.split(splitStr)
+    paths = gopath.split(splitStr)
     for p in paths:
         if p.lower() == basePath or p.lower() == '~/go' or p.lower() == '~/go/':
             return basePath
     return paths[0]
+
 
 def joinMap(m1, m2):
     if isinstance(m1, dict) and isinstance(m2, dict):
@@ -474,15 +530,30 @@ def joinMap(m1, m2):
         return m1
     raise Exception("Not dict.", m1, m2)
 
+
+def formatGoCode():
+    for line in os.popen('cd %s && gofmt -s -w .' % (projectAbsP)):
+        print(line)
+
+
+def addGoMod():
+    for line in os.popen('cd %s && go mod init && go mod tidy' % (projectAbsP)):
+        print(line)
+
+
 def main():
     global projectAbsP, projectName, organization, gitPath
     parser = argparse.ArgumentParser()
 
     parser.add_argument('project', help='project name')
-    parser.add_argument("--base", help='Create base model, like: main.go cmd...; Default use this model. If you don\'t want use base. Set: --base disable.')
-    parser.add_argument('-o', '--organization', help='Reset organization. Default is `github.com`', metavar='')
-    parser.add_argument("--go_path", help='Choose go path. Default use your path value.')
-    parser.add_argument("--grpc", help='Create GRPC model.', action='store_true')
+    parser.add_argument(
+        "--base", help='Create base model, like: main.go cmd...; Default use this model. If you don\'t want use base. Set: --base disable.')
+    parser.add_argument('-o', '--organization',
+                        help='Reset organization. Default is `github.com`', metavar='')
+    parser.add_argument(
+        "--go_path", help='Choose go path. Default use your path value.')
+    parser.add_argument("--grpc", help='Create GRPC model.',
+                        action='store_true')
     parser.add_argument("--git", help='Add remote git.', metavar='')
 
     # 解析参数步骤
@@ -497,7 +568,8 @@ def main():
 
     projectAbsP = os.path.join(goHome, 'src', organization, projectName)
     if os.path.exists(projectAbsP):
-        print("Project `{}` is exists. Absolute path: {}.".format(args.project, projectAbsP))
+        print("Project `{}` is exists. Absolute path: {}.".format(
+            args.project, projectAbsP))
         _in = input("Do you want to overriding this project? [Y/N]:")
         if _in.upper() != 'Y':
             print('Give up!')
@@ -521,7 +593,10 @@ def main():
 
     for item in models:
         item.render(config.get(item.name(), {}))
+    formatGoCode()
+    addGoMod()
     print('executed!')
+
 
 if __name__ == '__main__':
     main()
