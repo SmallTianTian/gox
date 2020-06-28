@@ -174,7 +174,6 @@ func RunBase(cmd *cobra.Command, args []string) {
     def _main(self):
         template = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
 package main
-// code from auto build. 
 
 import (
 	"log"
@@ -209,7 +208,6 @@ var me *logrus.Entry
 
 func InitLogger(logLevel string, env string) {
 	logEntry := logrus.New()
-	//logEntry.Level = logrus.WarnLevel
 	level, err := logrus.ParseLevel(logLevel)
 	if err != nil {
 		logrus.WithError(err).Error("Error parsing log level, using: info")
