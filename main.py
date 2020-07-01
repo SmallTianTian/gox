@@ -235,6 +235,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/spf13/viper"
@@ -253,8 +254,9 @@ func InitConfig() *Config {{
 	// load config file
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath(os.Getenv("CONFIG_PATH"))
 	viper.AddConfigPath("config")
+	viper.AddConfigPath(".")
 
 	err := viper.ReadInConfig()
 	if err != nil {{
@@ -269,6 +271,7 @@ func InitConfig() *Config {{
 		fmt.Println(err)
 		panic("Init config failed.")
 	}}
+        fmt.Println("Use config:", viper.ConfigFileUsed())
 	return &DefaultConfig
 }}
 
