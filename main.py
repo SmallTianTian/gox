@@ -89,6 +89,7 @@ class Base():
         self._logPkg()
         self._config(data)
         self._cmd()
+        self._make()
 
     def getParam(self):
         result = {}
@@ -96,6 +97,114 @@ class Base():
         result['Base'] = {'config': {
             'logger': {'level': 'info', 'env': 'dev'}}}
         return result
+
+    def _make(self):
+        make_content = '''Version := beta
+build_common = go build -mod=vendor -ldflags "-X 'main.Version=$(Version)' -X 'main.BuildTime=`date "+%Y-%m-%d %H:%M:%S"`' -X 'main.GoVersion=`go version`' -X 'main.GitRevision=`git rev-parse HEAD`'"
+monitored_file = *.go */*.go */*/*.go */*/*/*.go */*/*/*/*.go */*.yaml
+
+help:
+	@echo 这是一个集成了编译、运行、git 提交、热于一体的 Makefile，适用于各种 golang 项目。
+	@echo 命令:
+	@echo "\t\033[1minit\033[0m"
+	@echo "\t\t首次使用此 Makefile 时你需要执行此命令来进行一些功能的初始化。"
+	@echo "\t\033[1mr, run\033[0m"
+	@echo "\t\t运行项目"
+	@echo "\t\033[1mb, build\033[0m"
+	@echo "\t\t编译项目，生成的可执行文件将放置在 bin/ 目录中。\033[1m如果 main.go 不在此文件同级目录，你需要修改 build 部分命令\033[0m"
+	@echo "\t\t也可使用 \033[1mbuild_linux, build_windows\033[0m 编译不同平台的可执行文件默认使用 amd64 架构"
+	@echo "\t\033[1mc, clean\033[0m"
+	@echo "\t\t清理项目编译结果"
+	@echo "\t\033[1mdr, devrun\033[0m"
+	@echo "\t\t以热编译方式运行项目，被监控的文件在改动后 5s 内，将被重新编译，并重新运行整个项目"
+	@echo "\t\t更改 Makefile 中的 monitored_file，可以自由指定需要监控的文件"
+	@echo "\t\033[1mstop\033[0m"
+	@echo "\t\t中止 \033[1mrun, devrun\033[0m的运行"
+	@echo "\t\033[1mcommit\033[0m"
+	@echo "\t\t将自动添加当前所有的更改，并根据后续的输入自动生成合格的 commit 信息， 使用此功能的好处是便于自动生成 CHANGELOG"
+	@echo "\t\033[1mrelease\033[0m"
+	@echo "\t\t自动 release 一个小版本，例如 v1.0.0 -> v1.0.1"
+	@echo "\t\033[1mrelease_minor\033[0m"
+	@echo "\t\t自动 release 一个次要版本，例如 v1.0.0 -> v1.1.0"
+	@echo "\t\033[1mrelease_major\033[0m"
+	@echo "\t\t自动 release 一个主要版本，例如 v1.0.0 -> v2.0.0"
+
+# short commond
+b: build
+c: clean
+r: run
+dr: devrun
+
+build: config
+	@$(build_common) -o ./bin/server
+
+.PHONY: build_linux
+build_linux: config
+	@GOOS=linux GOARCH=amd64 $(build_common) -o ./bin/server
+
+.PHONY: build_windows
+build_windows: config
+	@GOOS=windows GOARCH=amd64 $(build_common) -o ./bin/server.exe
+
+.PHONY: clean
+clean:
+	@rm -rf ./bin
+
+.PHONY: stop
+stop:
+	@ps -ef | grep -v 'grep' | grep -v 'ps' | grep "./bin/server\|make devrun" | awk '{print $$2}' | xargs kill -9
+
+.PHONY: run
+run: clean build
+	@./bin/server base
+
+.PHONY: devrun
+devrun:
+	@make back_run
+	@while [ $$? -eq 0 ]; do sleep 5s && make -s bin/server; done
+
+.PHONY: commit
+commit:
+	@git status
+	@git add .
+	@git cz
+
+.PHONY: release_major
+release_major:
+	@standard-version -r major
+
+.PHONY: release_minor
+release_minor:
+	@standard-version -r minor
+
+.PHONY: release
+release:
+	@standard-version
+
+.PHONY: init
+init:
+	@go mod tidy && go mod vendor
+	@npm install -g cnpm --registry=https://registry.npm.taobao.org
+	@cnpm install -g commitizen
+	@cnpm install -g conventional-changelog
+	@cnpm install -g conventional-changelog-cli
+	@cnpm init --yes
+	@commitizen init cz-conventional-changelog --save --save-exact
+
+# tools, shouldn't call this in command
+.PHONY: config
+config:
+	@mkdir -p ./bin/config
+	@cp ./config/config.yaml ./bin/config/
+
+bin/server: $(monitored_file)
+	@-go vet >/dev/null 2>&1 && ps -ef | grep -v 'grep' | grep -v 'ps' | grep "./bin/server" | awk '{print $$2}' | xargs kill -9 && echo ==================== restart server... ==================== && make back_run
+
+.PHONY: back_run
+back_run: clean build
+	@./bin/server base
+'''
+        WriteContentToFile('Makefile', make_content, '')
 
     def _cmd(self):
         root_content = '''// Auto generate code. Help should mail to ['tianxuxin@126.com']
@@ -538,7 +647,7 @@ def formatGoCode():
 
 
 def addGoMod():
-    for line in os.popen('cd %s && go mod init && go mod tidy' % (projectAbsP)):
+    for line in os.popen('cd %s && go mod init && go mod tidy && go mod vendor' % (projectAbsP)):
         print(line)
 
 
