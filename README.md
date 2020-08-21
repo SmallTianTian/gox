@@ -22,6 +22,8 @@ project
 │   └─── ***
 └─── server           # 所有 cmd 所需要使用的服务应该在这里统一
 │   └─── grpc.go
+|   └─── proxy.go
+└─── Makefile
 ```
 
 ### 使用方式
