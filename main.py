@@ -219,6 +219,13 @@ import (
 	"{organization}/{project}/pkg/logger"
 )
 
+var (
+	Version     string
+	BuildTime   string
+	GoVersion   string
+	GitRevision string
+)
+
 var rootCmd = &cobra.Command{{
 	Use:   "{project}",
 	Short: "",
@@ -235,6 +242,17 @@ var baseCmd = &cobra.Command{{
 	}},
 }}
 
+var versionCmd = &cobra.Command{{
+	Use:   "version",
+	Short: "show version",
+	Run: func(cmd *cobra.Command, args []string) {{
+		fmt.Println("Version:", Version)
+		fmt.Println("Build time:", BuildTime)
+		fmt.Println("Go version:", GoVersion)
+		fmt.Println("Commit hash:", GitRevision)
+	}},
+}}
+
 func Execute() {{
 	if err := rootCmd.Execute(); err != nil {{
 		fmt.Println(err)
@@ -244,6 +262,7 @@ func Execute() {{
 
 func init() {{
 	rootCmd.AddCommand(baseCmd)
+	rootCmd.AddCommand(versionCmd)
 	cobra.OnInitialize(onInitialize)
 }}
 
@@ -292,7 +311,19 @@ import (
 	"{organization}/{project}/cmd"
 )
 
+var (
+	Version     string
+	BuildTime   string
+	GoVersion   string
+	GitRevision string
+)
+
 func main() {{
+	cmd.Version = Version
+	cmd.BuildTime = BuildTime
+	cmd.GoVersion = GoVersion
+	cmd.GitRevision = GitRevision
+
 	go func() {{
 	    if err := http.ListenAndServe(":6060", nil); err != nil {{
             log.Println(err)
