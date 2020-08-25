@@ -225,7 +225,7 @@ bin/server: $(monitored_file)
 
 .PHONY: back_run
 back_run: clean build
-        @./bin/server base&
+	@./bin/server base&
 '''
         WriteContentToFile('Makefile', make_content, '')
 
