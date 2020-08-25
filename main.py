@@ -90,6 +90,7 @@ class Base():
         self._config(data)
         self._cmd()
         self._make()
+        self._docker()
 
     def getParam(self):
         result = {}
@@ -97,6 +98,28 @@ class Base():
         result['Base'] = {'config': {
             'logger': {'level': 'info', 'env': 'dev'}}}
         return result
+
+    def _docker(self):
+        docker_content = '''# 编译
+FROM golang:1.15 as build
+
+WORKDIR /build
+
+COPY .  .
+
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main -ldflags "-s -w -extldflags -static" -mod=vendor .
+
+# 运行
+FROM scratch AS prod
+
+WORKDIR /root/
+
+COPY --from=build /build/main .
+COPY --from=build /build/config/config.yaml ./config/config.yaml
+
+CMD ["./main", "base"]
+'''
+        WriteContentToFile('Dockerfile', docker_content, '')
 
     def _make(self):
         make_content = '''Version := beta
