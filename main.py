@@ -72,6 +72,15 @@ class Git(Model):
         global gitPath
         for line in os.popen('cd %s && git init && git remote add -m master origin %s && git fetch origin && git checkout origin/master && git checkout master' % (projectAbsP, gitPath)):
             print(line)
+        self._ignore()
+
+    def _ignore(self):
+        ignore_content = '''node_modules
+bin
+.idea
+.vscode
+'''
+        WriteContentToFile('.gitignore', ignore_content, '')
 
     def name(self):
         return 'git'
