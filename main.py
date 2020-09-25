@@ -618,7 +618,7 @@ func RunProxy() error {{
 	mux := runtime.NewServeMux()
 	opts := []grpc.DialOption{{grpc.WithInsecure()}}
 
-	grpcPort := fmt.Sprintf(":%s", config.DefaultConfig.Grpc.Port)
+	grpcPort := fmt.Sprintf("localhost:%s", config.DefaultConfig.Grpc.Port)
 	registProxy(ctx, mux, grpcPort, opts)
 
 	return http.ListenAndServe(fmt.Sprintf(":%s", port), mux)
