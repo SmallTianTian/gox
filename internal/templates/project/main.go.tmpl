@@ -1,0 +1,33 @@
+package main
+
+	import (
+		"net/http"
+		"net/http/pprof"
+
+		"{{.module}}/cmd"
+	)
+
+	var (
+		Version     string
+		BuildTime   string
+		GoVersion   string
+		GitRevision string
+	)
+
+	func main() {
+		cmd.Version = Version
+		cmd.BuildTime = BuildTime
+		cmd.GoVersion = GoVersion
+		cmd.GitRevision = GitRevision
+
+		go func() {
+			mux := http.NewServeMux()
+			mux.HandleFunc("/debug/pprof/", pprof.Index)
+			mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
+			mux.HandleFunc("/debug/pprof/profile", pprof.Profile)
+			mux.HandleFunc("/debug/pprof/symbol", pprof.Symbol)
+			mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
+			http.ListenAndServe(":6060", mux)
+		}()
+		cmd.Execute()
+	}

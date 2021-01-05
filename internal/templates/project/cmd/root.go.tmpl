@@ -1,0 +1,60 @@
+package cmd
+
+import (
+	"log"
+
+	"github.com/spf13/cobra"
+	"{{.module}}/config"
+	"{{.module}}/pkg/logger"
+)
+
+var (
+	Version     string
+	BuildTime   string
+	GoVersion   string
+	GitRevision string
+)
+
+var rootCmd = &cobra.Command{
+	Use:   "{{.projectName}}",
+	Short: "",
+	Run: func(cmd *cobra.Command, args []string) {
+		cmd.Help()
+	},
+}
+
+var baseCmd = &cobra.Command{
+	Use:   "base",
+	Short: "Start base server.",
+	Run: func(cmd *cobra.Command, args []string) {
+		RunBase(cmd, args)
+	},
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "show version",
+	Run: func(cmd *cobra.Command, args []string) {
+		log.Println("Version:", Version)
+		log.Println("Build time:", BuildTime)
+		log.Println("Go version:", GoVersion)
+		log.Println("Commit hash:", GitRevision)
+	},
+}
+
+func Execute() {
+	if err := rootCmd.Execute(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func init() {
+	rootCmd.AddCommand(baseCmd)
+	rootCmd.AddCommand(versionCmd)
+	cobra.OnInitialize(onInitialize)
+}
+
+func onInitialize() {
+	cfg := config.InitConfig()
+	logger.InitLogger(cfg.Logger.Level, cfg.Logger.Env)
+}

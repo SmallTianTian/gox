@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+import "google/protobuf/empty.proto";
+import "google/protobuf/wrappers.proto";
+{{if .gateway}}
+import "google/api/annotations.proto";
+{{end}}
+
+package demo;
+option go_package = "ui/grpc/demo/proto";
+
+service demo {
+{{if .gateway}}
+    rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty) {
+        option (google.api.http) = {
+            get: "/ping"
+        };
+    }
+    rpc Ip(google.protobuf.Empty) returns (google.protobuf.StringValue) {
+        option (google.api.http) = {
+            get: "/ip"
+        };
+    }
+{{else}}
+    rpc Ping(google.protobuf.Empty) returns (google.protobuf.Empty);
+    rpc Ip(google.protobuf.Empty) returns (google.protobuf.StringValue);
+{{end}}
+}
