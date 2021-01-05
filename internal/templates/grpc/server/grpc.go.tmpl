@@ -1,0 +1,62 @@
+package server
+
+import (
+	"{{.module}}/config"
+	"{{.module}}/pkg/logger"
+	"{{.module}}/ui/grpc/demo"
+	proto "{{.module}}/ui/grpc/demo/proto"
+
+	"fmt"
+	"net"
+
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	grpclogrus "github.com/grpc-ecosystem/go-grpc-middleware/logging/logrus"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+)
+
+func registGRPC(gs *grpc.Server) {
+	proto.RegisterDemoServer(gs, &demo.Demo{})
+}
+
+var (
+	grpcServer *grpc.Server
+)
+
+func RunGrpc() error {
+	ul, sl := glog()
+	grpcServer = grpc.NewServer(
+		grpc_middleware.WithUnaryServerChain(
+			grpc_recovery.UnaryServerInterceptor(),
+			ul,
+		),
+		grpc_middleware.WithStreamServerChain(
+			grpc_recovery.StreamServerInterceptor(),
+			sl,
+		),
+	)
+	registGRPC(grpcServer)
+	// Register reflection service on gRPC server.
+	reflection.Register(grpcServer)
+
+	port := fmt.Sprintf(":%d", config.DefaultConfig.Port.Grpc)
+	// init grpc server
+	lis, err := net.Listen("tcp", port)
+	if err != nil {
+		return err
+	}
+	logger.Infof("GRPC server start, listen at %s.", port)
+	go grpcServer.Serve(lis)
+	return nil
+}
+
+func glog() (grpc.UnaryServerInterceptor, grpc.StreamServerInterceptor) {
+	return grpclogrus.UnaryServerInterceptor(logger.Logrus()),
+		grpclogrus.StreamServerInterceptor(logger.Logrus())
+}
+
+func StopGrpc() {
+	grpcServer.Stop()
+	logger.Info("GRPC server stoped.")
+}
