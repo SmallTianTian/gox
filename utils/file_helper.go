@@ -3,6 +3,7 @@ package utils
 import (
 	"bufio"
 	"bytes"
+	"errors"
 	"go/ast"
 	"go/format"
 	"go/parser"
@@ -11,17 +12,19 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+
+	"github.com/SmallTianTian/fresh-go/pkg/logger"
 )
 
 func OverwritingFile(path, fpName, content string) {
 	fullPath := filepath.Join(path, fpName)
 	if IsExist(fullPath) {
-		err := ioutil.WriteFile(fullPath, []byte(content), 0644)
+		err := ioutil.WriteFile(fullPath, []byte(content), 0600)
 		MustNotError(err)
 	}
 	err := os.MkdirAll(filepath.Dir(fullPath), os.ModePerm)
 	MustNotError(err)
-	err = ioutil.WriteFile(fullPath, []byte(content), 0644)
+	err = ioutil.WriteFile(fullPath, []byte(content), 0600)
 	MustNotError(err)
 }
 
@@ -35,7 +38,7 @@ func ReadTxtFileEachLine(path string) (lines []string) {
 	r := bufio.NewReader(bytes.NewBuffer(ReadFile(path)))
 	for {
 		line, _, err := r.ReadLine()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		MustNotError(err)
@@ -70,5 +73,6 @@ func WriteByTemplate(path string, fileAndTmpl map[string]string, keyAndRealValue
 		realContent, err := StringFormat(tmpl, keyAndRealValue)
 		MustNotError(err)
 		OverwritingFile(path, file, realContent)
+		logger.Debugf("Write file `%s` to `%s` `%d` byte successful.", file, path, len(realContent))
 	}
 }

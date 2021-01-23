@@ -1,4 +1,4 @@
-package ast_util
+package ast
 
 import (
 	"go/ast"
@@ -37,7 +37,7 @@ L:
 		}
 	}
 	residue = father[i:]
-	return
+	return result, residue
 }
 
 func fileGetNode(f *ast.File, key string) ast.Node {

@@ -1,4 +1,4 @@
-package config_util
+package config
 
 import (
 	"path/filepath"

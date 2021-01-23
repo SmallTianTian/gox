@@ -17,6 +17,10 @@ type Logger interface {
 
 var instance Logger
 
+func init() {
+	InitLogger("debug")
+}
+
 func Debug(args ...interface{}) {
 	instance.Debug(args)
 }
@@ -72,6 +76,9 @@ func initLogrus(logLevel string) {
 	Formatter := new(logrus.TextFormatter)
 	Formatter.TimestampFormat = "20060102T15:04:05.999"
 	Formatter.FullTimestamp = true
+	if level == logrus.DebugLevel {
+		Formatter.DisableQuote = true
+	}
 	logEntry.SetFormatter(Formatter)
 	instance = logEntry
 }

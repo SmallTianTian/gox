@@ -3,35 +3,36 @@ package cmd
 import (
 	"path/filepath"
 
+	"github.com/SmallTianTian/fresh-go/config"
 	"github.com/SmallTianTian/fresh-go/internal/grpc"
+	"github.com/SmallTianTian/fresh-go/pkg/logger"
 	"github.com/SmallTianTian/fresh-go/utils"
 	"github.com/spf13/cobra"
 )
 
 var grpcCmd = &cobra.Command{
 	Use:   "grpc",
-	Short: "Create a fresh project.",
-	Args:  cobra.MaximumNArgs(1),
+	Short: "Add grpc server.",
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			cmd.Help()
+		prepare()
+		if config.DefaultConfig.GRPC.Port <= 0 {
+			logger.Error("Grpc port must > 0.")
 			return
 		}
 
-		InitGrpc()
+		if utils.IsExist(filepath.Join(config.DefaultConfig.Project.Path, "ui/grpc")) {
+			logger.Error("Couldn't init grpc again.")
+			return
+		}
+
+		logger.Debug("Will begin create grpc.")
+		grpc.NewGrpc()
+		utils.GoModRebuild(config.DefaultConfig.Project.Path)
 	},
 }
 
 func init() {
-	grpcCmd.PersistentFlags().IntVar(&GrpcPort, "port", 50051, "Set grpc server port.")
-	grpcCmd.PersistentFlags().IntVar(&GrpcProxyPort, "proxy-port", 0, "Create grpc port server port.")
-}
-
-func InitGrpc() {
-	if GrpcPort != 0 && !utils.IsExist(filepath.Join(ProjectPath, "ui/grpc")) {
-		grpc.NewGrpc(ProjectPath, Organization, GrpcPort, GrpcProxyPort)
-		if !IsNewProject {
-			utils.GoModRebuild(ProjectPath)
-		}
-	}
+	grpcCmd.PersistentFlags().IntVar(&config.DefaultConfig.GRPC.Port, "port", 50051, "Set grpc server port.")
+	grpcCmd.PersistentFlags().IntVar(&config.DefaultConfig.GRPC.Proxy, "proxy", 0,
+		"Set grpc proxy server port. If set, will create grpc proxy. Default not create.")
 }

@@ -2,16 +2,13 @@ package utils
 
 import (
 	"fmt"
-	"os"
-	"runtime/debug"
 	"strings"
 )
 
+// MustTrue
 func MustTrue(flat bool, msg string) {
 	if !flat {
-		debug.PrintStack()
-		println(msg)
-		os.Exit(1)
+		panic(msg)
 	}
 }
 
@@ -24,5 +21,5 @@ func MustNotNil(v interface{}) {
 }
 
 func MustNotBlank(s string) {
-	MustTrue(s == "" || strings.TrimSpace(s) == "", "Shouldn't be blank.")
+	MustTrue(s != "" && strings.TrimSpace(s) != "", "Shouldn't be blank.")
 }

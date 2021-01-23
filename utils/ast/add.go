@@ -1,4 +1,4 @@
-package ast_util
+package ast
 
 import (
 	"fmt"
@@ -39,7 +39,6 @@ func AddField2AstFile(astF *ast.File, fn, _type string, father []string) {
 	}
 
 	if node == nil {
-		astF.Decls = append(astF.Decls)
 		return
 	}
 
@@ -64,8 +63,7 @@ func AppendFuncCall2AstFile(astF *ast.File, fn string, pNames, father []string) 
 		return
 	}
 
-	switch f := node.(type) {
-	case *ast.FuncDecl:
+	if f, ok := node.(*ast.FuncDecl); ok {
 		x := &ast.CallExpr{Fun: ast.NewIdent(fn)}
 		stmt := &ast.ExprStmt{X: x}
 		for _, pn := range pNames {

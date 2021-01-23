@@ -1,4 +1,4 @@
-package ast_util_test
+package ast_test
 
 type _struct1 struct {
 	A string

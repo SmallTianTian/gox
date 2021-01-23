@@ -1,4 +1,4 @@
-package ast_util
+package ast
 
 import (
 	"go/ast"

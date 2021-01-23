@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"bufio"
 	"context"
-	"io"
+	"os"
 	"os/exec"
+	"syscall"
 )
 
 func Exec(path, name string, args ...string) error {
@@ -13,34 +13,14 @@ func Exec(path, name string, args ...string) error {
 	return c.Run()
 }
 
-func ExecWithOut(ctx context.Context, path, name string, args ...string) (<-chan string, error) {
+func ExecWithPrintStd(ctx context.Context, path, name string, args ...string) (command *exec.Cmd, err error) {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = path
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
-	}
-	c := make(chan string, 0)
-	go func() {
-		defer close(c)
-		defer stdout.Close()
-		br := bufio.NewReader(stdout)
-		for {
-			if ctx.Err() != nil {
-				return
-			}
-			lbs, _, e := br.ReadLine()
-			if e == nil {
-				c <- string(lbs)
-				continue
-			}
-			if e != io.EOF {
-				c <- string("Error: " + e.Error())
-			}
-			return
-		}
-	}()
-	return c, cmd.Run()
+	cmd.Stderr = os.Stderr
+	cmd.Stdout = os.Stdout
+	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true}
+
+	return cmd, cmd.Start()
 }
 
 func CheckCommandExists(command string) bool {

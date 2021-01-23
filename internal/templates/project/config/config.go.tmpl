@@ -15,11 +15,10 @@ var (
 type Config struct {
     Logger struct {
         Level string
-        Env   string
     }
 }
 
-func InitConfig() *Config {
+func InitConfig() {
     // load config file
     viper.SetConfigName("config")
     viper.SetConfigType("yaml")
@@ -40,7 +39,6 @@ func InitConfig() *Config {
         log.Fatal("Init config failed.", err)
     }
     log.Println("Use config:", viper.ConfigFileUsed())
-    return &DefaultConfig
 }
 
 func GetConfig() *Config {
