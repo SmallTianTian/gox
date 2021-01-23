@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/SmallTianTian/fresh-go/config"
+	"github.com/SmallTianTian/fresh-go/pkg/logger"
 	"github.com/SmallTianTian/fresh-go/utils"
 	ast_util "github.com/SmallTianTian/fresh-go/utils/ast"
 	config_util "github.com/SmallTianTian/fresh-go/utils/config"
@@ -14,12 +16,28 @@ var fileAndTmpl = map[string]string{
 	"server/http.go":  utils.ReadStatikFile("/http/server_http.go.tmpl"),
 }
 
-func NewHttp(path, organization string, httpPort int) {
-	module := filepath.Join(organization, filepath.Base(path))
+func NewHTTP() {
+	pro := config.DefaultConfig.Project.Name
+	org := config.DefaultConfig.Project.Org
+	dir := config.DefaultConfig.Project.Path
+	module := filepath.Join(org, pro)
+	httpPort := config.DefaultConfig.HTTP.Port
+
+	if httpPort <= 0 {
+		logger.Debug("Not set real http port, will skip create http server.")
+		return
+	}
+	logger.Debugf("Project name: %s\nOrganization: %s\nPath: %s\nHTTP port: %d", pro, org, dir, httpPort)
+
 	var kRv = map[string]interface{}{"module": module}
-	utils.WriteByTemplate(path, fileAndTmpl, kRv)
-	addConfig(path, httpPort)
-	addCmdRun(path, module)
+	utils.WriteByTemplate(dir, fileAndTmpl, kRv)
+	logger.Debug("Writing to the http file is complete.")
+
+	addConfig(dir, httpPort)
+	logger.Debug("Add config is complete.")
+
+	addCmdRun(dir, module)
+	logger.Debug("Add cmd run is complete.")
 }
 
 func addConfig(path string, httpPort int) {

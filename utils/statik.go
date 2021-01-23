@@ -3,6 +3,7 @@ package utils
 import (
 	"io/ioutil"
 
+	// Register some standard stuff
 	_ "github.com/SmallTianTian/fresh-go/statik"
 	"github.com/rakyll/statik/fs"
 )

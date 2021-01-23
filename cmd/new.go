@@ -1,10 +1,13 @@
 package cmd
 
 import (
-	"os"
 	"path/filepath"
 
-	"github.com/SmallTianTian/fresh-go/internal/new"
+	"github.com/SmallTianTian/fresh-go/config"
+	"github.com/SmallTianTian/fresh-go/internal/grpc"
+	"github.com/SmallTianTian/fresh-go/internal/http"
+	"github.com/SmallTianTian/fresh-go/internal/project"
+	"github.com/SmallTianTian/fresh-go/pkg/logger"
 	"github.com/SmallTianTian/fresh-go/utils"
 	"github.com/spf13/cobra"
 )
@@ -12,45 +15,36 @@ import (
 var newCmd = &cobra.Command{
 	Use:   "new [project name]",
 	Short: "Create a fresh project.",
-	Args:  cobra.MaximumNArgs(1),
+	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		if len(args) == 0 {
-			cmd.Help()
-			return
-		}
-		ProjectName = args[0]
-		ProjectPath = filepath.Join(ProjectPath, ProjectName)
-		IsNewProject = true
-		NewProject()
+		prepare()
+
+		// 设置项目名称
+		config.DefaultConfig.Project.Name = args[0]
+
+		logger.Debug("Will begin create new project.")
+		project.NewProject()
+
+		// 初始化其他模块
+		logger.Debug("Will begin create grpc.")
+		grpc.NewGrpc()
+		logger.Debug("Will begin create http.")
+		http.NewHTTP()
+
+		// 执行 go mod
+		utils.FirstMod(config.DefaultConfig.Project.Path,
+			filepath.Join(config.DefaultConfig.Project.Org, config.DefaultConfig.Project.Name),
+			config.DefaultConfig.Project.Vendor)
 	},
 }
 
 func init() {
-	pwd, _ := os.Getwd()
-	newCmd.PersistentFlags().StringVarP(&ProjectPath, "project_path", "p", pwd, "The place where the project was created.")
-	newCmd.PersistentFlags().StringVarP(&Organization, "organization", "o", "github.com", "Your project organization.")
-	newCmd.PersistentFlags().BoolVar(&Vendor, "vendor", false, "Use the vendor directory.")
-	newCmd.PersistentFlags().IntVar(&HttpPort, "http-port", 0, "Add http server with port.")
-	newCmd.PersistentFlags().IntVar(&GrpcPort, "grpc-port", 0, "Add grpc server with port.")
-	newCmd.PersistentFlags().IntVar(&GrpcProxyPort, "proxy-port", 0, "Add grpc server with port.")
-}
-
-func NewProject() {
-	err := new.NewProject(ProjectPath, Organization, Vendor)
-	utils.MustNotError(err)
-
-	// init another server
-	InitHttp()
-	InitGrpc()
-
-	utils.FirstMod(ProjectPath, filepath.Join(Organization, ProjectName), Vendor)
-}
-
-func notNewSetProjectInfo() {
-	ProjectPath, _ = os.Getwd()
-	oAp := utils.GetOrganizationAndProjectName(ProjectPath)
-	utils.MustNotBlank(oAp)
-
-	ProjectName = filepath.Base(oAp)
-	Organization = filepath.Dir(oAp)
+	newCmd.PersistentFlags().StringVarP(&config.DefaultConfig.Project.Path, "project_path", "p",
+		config.DefaultConfig.Project.EnvPath, "The place where the project was created.")
+	newCmd.PersistentFlags().StringVarP(&config.DefaultConfig.Project.Org, "organization", "o",
+		config.DefaultConfig.Project.EnvOrg, "Your project organization.")
+	newCmd.PersistentFlags().BoolVar(&config.DefaultConfig.Project.Vendor, "vendor", false, "Use the vendor directory.")
+	newCmd.PersistentFlags().IntVar(&config.DefaultConfig.HTTP.Port, "http-port", 0, "Add http server with port.")
+	newCmd.PersistentFlags().IntVar(&config.DefaultConfig.GRPC.Port, "grpc-port", 0, "Add grpc server with port.")
+	newCmd.PersistentFlags().IntVar(&config.DefaultConfig.GRPC.Proxy, "proxy-port", 0, "Add grpc proxy server with port.")
 }

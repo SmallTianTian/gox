@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"path/filepath"
 
+	"github.com/SmallTianTian/fresh-go/config"
+	"github.com/SmallTianTian/fresh-go/pkg/logger"
 	"github.com/SmallTianTian/fresh-go/utils"
 	ast_util "github.com/SmallTianTian/fresh-go/utils/ast"
 	config_util "github.com/SmallTianTian/fresh-go/utils/config"
@@ -19,22 +21,44 @@ var gatewayFileAndTmpl = map[string]string{
 	"server/proxy.go": utils.ReadStatikFile("/grpc/server/proxy.go.tmpl"),
 }
 
-func NewGrpc(path, organization string, grpcPort, grpcProxyPort int) {
-	module := filepath.Join(organization, filepath.Base(path))
+func NewGrpc() {
+	pro := config.DefaultConfig.Project.Name
+	org := config.DefaultConfig.Project.Org
+	dir := config.DefaultConfig.Project.Path
+	grpcPort := config.DefaultConfig.GRPC.Port
+	proxyPort := config.DefaultConfig.GRPC.Proxy
+	module := filepath.Join(org, pro)
+	if grpcPort <= 0 {
+		logger.Debug("Not set real grpc port, will skip create grpc server.")
+		return
+	}
+	logger.Debugf("Project name: %s\nOrganization: %s\nPath: %s\nGRPC port: %d\nProxy port: %d",
+		pro, org, dir, grpcPort, proxyPort)
+
 	var kRv = map[string]interface{}{
 		"module":  module,
-		"gateway": grpcProxyPort > 0,
+		"gateway": proxyPort > 0,
 	}
-	utils.WriteByTemplate(path, fileAndTmpl, kRv)
+	utils.WriteByTemplate(dir, fileAndTmpl, kRv)
+	logger.Debug("Writing to the grpc file is complete.")
 
-	if grpcProxyPort > 0 {
-		utils.WriteByTemplate(path, gatewayFileAndTmpl, kRv)
+	if proxyPort > 0 {
+		utils.WriteByTemplate(dir, gatewayFileAndTmpl, kRv)
 	}
+	logger.Debug("Writing to the proxy file is complete.")
 
-	addConfig(path, grpcPort, grpcProxyPort)
-	addCmdRun(path, module, grpcProxyPort)
-	addMakefile(path, grpcProxyPort)
-	utils.Exec(path, "make", "proto")
+	addConfig(dir, grpcPort, proxyPort)
+	logger.Debug("Add config is complete.")
+
+	addCmdRun(dir, module, proxyPort)
+	logger.Debug("Add cmd run is complete.")
+
+	addMakefile(dir, proxyPort)
+	logger.Debug("Add Makefile is complete.")
+
+	err := utils.Exec(dir, "make", "proto")
+	utils.MustNotError(err)
+	logger.Debug("Exec generate file is complete.")
 }
 
 func addConfig(path string, grpcPort, grpcProxyPort int) {
@@ -69,12 +93,14 @@ func addCmdRun(path, module string, grpcProxyPort int) {
 func addMakefile(path string, grpcProxyPort int) {
 	path = filepath.Join(path, "Makefile")
 	bs := utils.ReadFile(path)
+	//nolint
 	command := `
 
 proto: $(shell find . -name '*.proto')
 	@protoc -I. -I$(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative $^`
 
 	if grpcProxyPort > 0 {
+		//nolint
 		command += `
 	@protoc -I. -I$(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --openapiv2_out . --openapiv2_opt=logtostderr=true $^
 	@protoc -I. -I$(GOPATH)/src/github.com/grpc-ecosystem/grpc-gateway/third_party/googleapis --grpc-gateway_out . --grpc-gateway_opt=logtostderr=true,paths=source_relative $^`

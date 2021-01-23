@@ -55,6 +55,6 @@ func init() {
 }
 
 func onInitialize() {
-	cfg := config.InitConfig()
-	logger.InitLogger(cfg.Logger.Level, cfg.Logger.Env)
+	config.InitConfig()
+	logger.InitLogger(config.DefaultConfig.Logger.Level)
 }

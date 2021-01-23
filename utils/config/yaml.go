@@ -1,10 +1,11 @@
-package config_util
+package config
 
 import (
 	"github.com/SmallTianTian/fresh-go/utils"
 	y "gopkg.in/yaml.v2"
 )
 
+// Output student infrfdaomation.
 var yaml = func(content []byte, k string, v interface{}, father []string) []byte {
 	var m map[interface{}]interface{}
 	if err := y.Unmarshal(content, &m); err != nil {
@@ -15,10 +16,6 @@ var yaml = func(content []byte, k string, v interface{}, father []string) []byte
 		vm := make(map[interface{}]interface{})
 		if tv, in := tmp[fat]; in {
 			switch vr := tv.(type) {
-			case interface{}:
-				if vmt, ok := vr.(map[interface{}]interface{}); ok {
-					vm = vmt
-				}
 			case map[interface{}]interface{}:
 				vm = vr
 			default:
