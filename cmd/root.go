@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	commands = []*cobra.Command{versionCmd, newCmd, httpCmd, grpcCmd, doctorCmd}
+	commands = []*cobra.Command{versionCmd, newCmd, httpCmd, grpcCmd, doctorCmd, hotRunCmd}
 )
 
 var rootCmd = &cobra.Command{
