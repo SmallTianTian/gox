@@ -23,7 +23,7 @@ func CheckingEnv() {
 	}, {
 		"Grpc", "Grpc is the fast protocol.", false, CheckGrpcCompile,
 	}, {
-		"Grpc gateway", "Grpc gatewat helps you convert http to grpc.", false, CheckGrpcCompile,
+		"Grpc gateway", "Grpc gatewat helps you convert http to grpc.", false, CheckGrpcGatewayCompile,
 	}}
 
 	for _, v := range checks {
@@ -38,6 +38,7 @@ func CheckingEnv() {
 		}
 
 		println("\t", v.Desc)
+		println()
 		println(p)
 		println()
 	}
@@ -74,7 +75,8 @@ func CheckGrpcCompile() (bool, string) {
 	cmd := exec.Command("protoc", "--version")
 	bs, err := cmd.Output()
 	if err != nil {
-		return false, ""
+		return false, `Cloudn't compile grpc.
+More doc: https://grpc.io/docs/languages/go/quickstart/`
 	}
 
 	var gp string
@@ -87,18 +89,16 @@ func CheckGrpcCompile() (bool, string) {
 	if exist1 && exist2 {
 		return true, string(bs)
 	}
-	return false, `Cloudn't compile grpc. Should exec:
-	go get google.golang.org/protobuf/cmd/protoc-gen-go \
-	google.golang.org/grpc/cmd/protoc-gen-go-grpc
-
-	More doc: https://grpc.io/docs/languages/go/quickstart/`
+	return false, `Cloudn't compile grpc.
+More doc: https://grpc.io/docs/languages/go/quickstart/`
 }
 
 func CheckGrpcGatewayCompile() (bool, string) {
 	cmd := exec.Command("protoc", "--version")
 	bs, err := cmd.Output()
 	if err != nil {
-		return false, ""
+		return false, `Cloudn't compile grpc gateway.
+More doc: https://github.com/grpc-ecosystem/grpc-gateway`
 	}
 
 	var gp string
@@ -113,12 +113,6 @@ func CheckGrpcGatewayCompile() (bool, string) {
 	if exist1 && exist2 && exist3 && exist4 {
 		return true, string(bs)
 	}
-	return false, `Cloudn't compile grpc. Should exec:
-	go install \
-    github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-grpc-gateway \
-    github.com/grpc-ecosystem/grpc-gateway/v2/protoc-gen-openapiv2 \
-    google.golang.org/protobuf/cmd/protoc-gen-go \
-    google.golang.org/grpc/cmd/protoc-gen-go-grpc
-
-	More doc: https://github.com/grpc-ecosystem/grpc-gateway`
+	return false, `Cloudn't compile grpc gateway.
+More doc: https://github.com/grpc-ecosystem/grpc-gateway`
 }
