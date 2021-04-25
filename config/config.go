@@ -6,7 +6,7 @@ import (
 	"strings"
 
 	"github.com/SmallTianTian/fresh-go/utils"
-	"github.com/ory/viper"
+	"github.com/spf13/viper"
 )
 
 var (
