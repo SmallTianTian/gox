@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/SmallTianTian/fresh-go/config"
+	"github.com/SmallTianTian/fresh-go/internal/templates"
 	"github.com/SmallTianTian/fresh-go/pkg/logger"
 	"github.com/SmallTianTian/fresh-go/utils"
 	ast_util "github.com/SmallTianTian/fresh-go/utils/ast"
@@ -12,8 +13,8 @@ import (
 )
 
 var fileAndTmpl = map[string]string{
-	"ui/http/root.go": utils.ReadStatikFile("/http/gin/ui_http_root.go.tmpl"),
-	"server/http.go":  utils.ReadStatikFile("/http/server_http.go.tmpl"),
+	"ui/http/root.go": templates.ReadTemplateFile("http/gin/ui_http_root.go.tmpl"),
+	"server/http.go":  templates.ReadTemplateFile("http/server_http.go.tmpl"),
 }
 
 func NewHTTP() {

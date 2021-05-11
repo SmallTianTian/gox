@@ -1,11 +1,10 @@
 module github.com/SmallTianTian/fresh-go
 
-go 1.15
+go 1.16
 
 require (
 	github.com/fsnotify/fsnotify v1.4.9 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
-	github.com/rakyll/statik v0.1.7
 	github.com/sirupsen/logrus v1.8.1
 	github.com/smartystreets/goconvey v1.6.4
 	github.com/spf13/cobra v1.1.3

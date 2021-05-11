@@ -3,20 +3,20 @@ go_flags = -ldflags "-w -s -X 'main.Version=$(version)' -X 'main.BuildTime=`date
 ARMS = 5 6 7
 MIPSS = mips mipsle
 
-.PHONY: i b c install build compile clean statik
+.PHONY: i b c install build compile clean
 
 # short comment
 i: install
 b: build
 c: clean
 
-install: statik
+install:
 	@go install ${go_flags}
 
-build: statik
+build:
 	@go build ${go_flags} -o ./bin/fresh-go
 
-compile: statik
+compile:
 # mac
 	@GOOS=darwin GOARCH=amd64 go build $(go_flags) -o ./bin/fresh-go_darwin_amd64_${version}
 # windows
@@ -39,6 +39,3 @@ compile: statik
 
 clean:
 	@rm -rf ./bin
-
-statik:
-	@statik -src=internal/templates

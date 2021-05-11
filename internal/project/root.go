@@ -5,19 +5,20 @@ import (
 	"runtime"
 
 	"github.com/SmallTianTian/fresh-go/config"
+	"github.com/SmallTianTian/fresh-go/internal/templates"
 	"github.com/SmallTianTian/fresh-go/pkg/logger"
 	"github.com/SmallTianTian/fresh-go/utils"
 )
 
 var fileAndTmpl = map[string]string{
-	"main.go":              utils.ReadStatikFile("/project/main.go.tmpl"),
-	"Dockerfile":           utils.ReadStatikFile("/project/Dockerfile.tmpl"),
-	"Makefile":             utils.ReadStatikFile("/project/Makefile.tmpl"),
-	"cmd/base.go":          utils.ReadStatikFile("/project/cmd/base.go.tmpl"),
-	"cmd/root.go":          utils.ReadStatikFile("/project/cmd/root.go.tmpl"),
-	"config/config.go":     utils.ReadStatikFile("/project/config/config.go.tmpl"),
-	"config/config.yaml":   utils.ReadStatikFile("/project/config/config.yaml.tmpl"),
-	"pkg/logger/logger.go": utils.ReadStatikFile("/project/pkg/logger/logger.go.tmpl"),
+	"main.go":              templates.ReadTemplateFile("project/main.go.tmpl"),
+	"Dockerfile":           templates.ReadTemplateFile("project/Dockerfile.tmpl"),
+	"Makefile":             templates.ReadTemplateFile("project/Makefile.tmpl"),
+	"cmd/base.go":          templates.ReadTemplateFile("project/cmd/base.go.tmpl"),
+	"cmd/root.go":          templates.ReadTemplateFile("project/cmd/root.go.tmpl"),
+	"config/config.go":     templates.ReadTemplateFile("project/config/config.go.tmpl"),
+	"config/config.yaml":   templates.ReadTemplateFile("project/config/config.yaml.tmpl"),
+	"pkg/logger/logger.go": templates.ReadTemplateFile("project/pkg/logger/logger.go.tmpl"),
 }
 
 func NewProject() {

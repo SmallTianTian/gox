@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 
 	"github.com/SmallTianTian/fresh-go/config"
+	"github.com/SmallTianTian/fresh-go/internal/templates"
 	"github.com/SmallTianTian/fresh-go/pkg/logger"
 	"github.com/SmallTianTian/fresh-go/utils"
 	ast_util "github.com/SmallTianTian/fresh-go/utils/ast"
@@ -12,13 +13,13 @@ import (
 )
 
 var fileAndTmpl = map[string]string{
-	"ui/grpc/demo/proto/demo.proto": utils.ReadStatikFile("/grpc/ui/grpc/demo/proto/demo.proto.tmpl"),
-	"ui/grpc/demo/demo.go":          utils.ReadStatikFile("/grpc/ui/grpc/demo/demo.go.tmpl"),
-	"server/grpc.go":                utils.ReadStatikFile("/grpc/server/grpc.go.tmpl"),
+	"ui/grpc/demo/proto/demo.proto": templates.ReadTemplateFile("grpc/ui/grpc/demo/proto/demo.proto.tmpl"),
+	"ui/grpc/demo/demo.go":          templates.ReadTemplateFile("grpc/ui/grpc/demo/demo.go.tmpl"),
+	"server/grpc.go":                templates.ReadTemplateFile("grpc/server/grpc.go.tmpl"),
 }
 
 var gatewayFileAndTmpl = map[string]string{
-	"server/proxy.go": utils.ReadStatikFile("/grpc/server/proxy.go.tmpl"),
+	"server/proxy.go": templates.ReadTemplateFile("grpc/server/proxy.go.tmpl"),
 }
 
 func NewGrpc() {
