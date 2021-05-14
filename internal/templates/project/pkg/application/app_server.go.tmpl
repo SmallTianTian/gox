@@ -1,0 +1,12 @@
+package application
+
+import (
+	"context"
+
+	"go.uber.org/zap"
+)
+
+type AppServer interface {
+	Run(ctx context.Context, log *zap.Logger) error
+	Stop(ctx context.Context, log *zap.Logger)
+}

@@ -1,0 +1,11 @@
+#!/bin/bash
+MSG=`awk '{printf("%s",$0)}' $1`
+function checkMessage(){
+        res=`echo $MSG | grep -i -E '^feat([(].*[)]){0,1}:|^fix([(].*[)]){0,1}:|^docs([(].*[)]){0,1}:|^style([(].*[)]){0,1}:|^refactor([(].*[)]){0,1}:|^perf([(].*[)]){0,1}:|^test([(].*[)]){0,1}:|^build([(].*[)]){0,1}:|^ci([(].*[)]){0,1}:|^chore([(].*[)]){0,1}:|^revert[a-zA-Z_0-9()-]*:'`
+        if [[ $res == "" ]]; then
+                echo -e "INVALID COMMIT MSG: does not match \"<type>(<scope>): <subject>\" !\n $MSG"
+                exit 1
+        fi
+}
+
+checkMessage

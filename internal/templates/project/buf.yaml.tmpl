@@ -1,0 +1,19 @@
+version: v1beta1
+name: buf.build/{{.name}}
+deps:
+  - buf.build/beta/googleapis
+build:
+  roots:
+    - .
+  excludes:
+    - vendor
+lint:
+  ignore:
+    - vendor
+  use:
+    - DEFAULT
+  rpc_allow_google_protobuf_empty_requests: true
+  rpc_allow_google_protobuf_empty_responses: true
+breaking:
+  use:
+    - FILE

@@ -1,0 +1,16 @@
+// +build wireinject
+
+package main
+
+import (
+	"{{.module}}/internal/conf"
+	"{{.module}}/pkg/application"
+	"github.com/google/wire"
+	"go.uber.org/zap"
+)
+
+func initApp(config *conf.Config, log *zap.Logger) (*application.Application) {
+	panic(wire.Build(
+		NewApplication,
+	))
+}

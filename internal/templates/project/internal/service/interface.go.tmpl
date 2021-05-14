@@ -1,0 +1,15 @@
+package service
+
+import (
+	"context"
+
+	"{{.module}}/ent"
+)
+
+type UserService interface {
+	CreateUser(ctx context.Context, u *ent.User) (*ent.User, error)
+	DeleteUser(ctx context.Context, id int) error
+	UpdateUser(ctx context.Context, u *ent.User) (*ent.User, error)
+	GetUser(ctx context.Context, id int) (*ent.User, error)
+	ListUser(ctx context.Context, u *ent.User, limit, offset int) ([]*ent.User, int, error)
+}

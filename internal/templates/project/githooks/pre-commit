@@ -1,0 +1,13 @@
+#!/bin/bash
+red=`tput setaf 1`
+green=`tput setaf 2`
+reset=`tput sgr0`
+
+echo  "${green}start checking code${reset}"
+
+githooks/go_pre_commit.sh
+if [ $? != "" -a $? != 0 ]; then
+        exit 1
+fi
+
+exit

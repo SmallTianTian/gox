@@ -22,7 +22,7 @@ func init() {
 }
 
 func Debug(args ...interface{}) {
-	instance.Debug(args)
+	instance.Debug(args...)
 }
 
 func Debugf(template string, args ...interface{}) {
@@ -30,7 +30,7 @@ func Debugf(template string, args ...interface{}) {
 }
 
 func Error(args ...interface{}) {
-	instance.Error(args)
+	instance.Error(args...)
 }
 
 func Errorf(template string, args ...interface{}) {
@@ -38,7 +38,7 @@ func Errorf(template string, args ...interface{}) {
 }
 
 func Fatal(args ...interface{}) {
-	instance.Fatal(args)
+	instance.Fatal(args...)
 }
 
 func Fatalf(template string, args ...interface{}) {
@@ -46,7 +46,7 @@ func Fatalf(template string, args ...interface{}) {
 }
 
 func Info(args ...interface{}) {
-	instance.Info(args)
+	instance.Info(args...)
 }
 
 func Infof(template string, args ...interface{}) {
@@ -54,7 +54,7 @@ func Infof(template string, args ...interface{}) {
 }
 
 func Warn(args ...interface{}) {
-	instance.Warn(args)
+	instance.Warn(args...)
 }
 
 func Warnf(template string, args ...interface{}) {

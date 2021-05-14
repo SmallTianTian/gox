@@ -27,16 +27,10 @@ func Test_NewProject(t *testing.T) {
 			So(utils.IsExist(proPath), ShouldBeFalse)
 
 			So(NewProject, ShouldNotPanic)
-			So(utils.FirstMod(proPath,
-				filepath.Join(config.DefaultConfig.Project.Org, config.DefaultConfig.Project.Name),
-				config.DefaultConfig.Project.Vendor), ShouldBeTrue)
-
 			So(utils.IsExist(proPath), ShouldBeTrue)
 
-			main := filepath.Join(proPath, "main.go")
 			mod := filepath.Join(proPath, "go.mod")
 			vendor := filepath.Join(proPath, "vendor")
-			So(utils.IsExist(main), ShouldBeTrue)
 			So(utils.IsExist(mod), ShouldBeTrue)
 			So(utils.IsExist(vendor), ShouldBeFalse)
 
@@ -49,7 +43,7 @@ func Test_NewProject(t *testing.T) {
 
 			config.DefaultConfig.Project.Path = dir
 			So(func() { utils.Exec(proPath, "go", "vet") }, ShouldNotPanic)
-			So(utils.Exec(proPath, "go", "vet"), ShouldBeNil)
+			So(utils.Exec(proPath, "go", "vet", "./..."), ShouldBeNil)
 		})
 
 		Convey("能正常初始化包含 vendor 的项目", func() {
@@ -60,16 +54,10 @@ func Test_NewProject(t *testing.T) {
 			So(utils.IsExist(proPath), ShouldBeFalse)
 
 			So(NewProject, ShouldNotPanic)
-			So(utils.FirstMod(proPath,
-				filepath.Join(config.DefaultConfig.Project.Org, config.DefaultConfig.Project.Name),
-				config.DefaultConfig.Project.Vendor), ShouldBeTrue)
-
 			So(utils.IsExist(proPath), ShouldBeTrue)
 
-			main := filepath.Join(proPath, "main.go")
 			mod := filepath.Join(proPath, "go.mod")
 			vendor := filepath.Join(proPath, "vendor")
-			So(utils.IsExist(main), ShouldBeTrue)
 			So(utils.IsExist(mod), ShouldBeTrue)
 			So(utils.IsExist(vendor), ShouldBeTrue)
 
@@ -82,7 +70,7 @@ func Test_NewProject(t *testing.T) {
 
 			config.DefaultConfig.Project.Path = dir
 			So(func() { utils.Exec(proPath, "go", "vet") }, ShouldNotPanic)
-			So(utils.Exec(proPath, "go", "vet"), ShouldBeNil)
+			So(utils.Exec(proPath, "go", "vet", "./..."), ShouldBeNil)
 		})
 
 		Convey("不可重复初始化项目", func() {

@@ -1,0 +1,26 @@
+package grpc
+
+import (
+	"context"
+	"fmt"
+
+	v1 "{{.module}}/api/helloworld/v1"
+)
+
+type V1HelloworldService struct {
+	v1.UnimplementedGreeterServiceServer
+}
+
+func NewV1HelloworldService() *V1HelloworldService {
+	return &V1HelloworldService{}
+}
+
+func (hs V1HelloworldService) SayHello(ctx context.Context, req *v1.SayHelloRequest) (*v1.SayHelloResponse, error) {
+	name := req.GetName()
+	if name == "error" {
+		return nil, fmt.Errorf("bad name")
+	}
+	return &v1.SayHelloResponse{
+		Message: fmt.Sprintf("Hello %s~", name),
+	}, nil
+}

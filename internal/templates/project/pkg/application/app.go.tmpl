@@ -1,0 +1,87 @@
+package application
+
+import (
+	"context"
+	"errors"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"go.uber.org/zap"
+)
+
+type Application struct {
+	log     *zap.Logger
+	ctx     context.Context
+	runErrC chan error
+
+	appSrvs []AppServer
+}
+
+func NewApplication(ctx context.Context, log *zap.Logger) *Application {
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	if log == nil {
+		log = zap.NewNop()
+	}
+
+	return &Application{
+		log:     log,
+		ctx:     ctx,
+		runErrC: make(chan error),
+	}
+}
+
+func (app *Application) Up() {
+	for _, srv := range app.appSrvs {
+		app.asyncRunDealError(srv)
+	}
+}
+
+func (app *Application) WaitForShuttdown(sigs ...os.Signal) error {
+	sigs = append(sigs, []os.Signal{syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGINT}...)
+
+	sigC := make(chan os.Signal, 1)
+	signal.Notify(sigC, sigs...)
+
+	for {
+		select {
+		case <-sigC:
+			app.stop()
+			return nil
+		case err := <-app.runErrC:
+			app.stop()
+			return err
+		}
+	}
+}
+
+func (app *Application) asyncRunDealError(srv AppServer) {
+	go func() {
+		err := srv.Run(app.ctx, app.log)
+		if err = handleError(err); err != nil {
+			app.runErrC <- err
+		}
+	}()
+}
+
+func (app *Application) stop() {
+	for _, srv := range app.appSrvs {
+		srv.Stop(app.ctx, app.log)
+	}
+}
+
+func handleError(err error) error {
+	switch {
+	case err == nil: // 错误为空则正常
+		return nil
+	case errors.Is(err, context.Canceled): // 被取消则正常
+		return nil
+	case err == http.ErrServerClosed: // 服务关闭则正常
+		return nil
+	default:
+		return err
+	}
+}

@@ -1,0 +1,31 @@
+package server
+
+import (
+	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
+	"go.uber.org/zap"
+
+	grpc_zap "github.com/grpc-ecosystem/go-grpc-middleware/logging/zap"
+	grpc_recovery "github.com/grpc-ecosystem/go-grpc-middleware/recovery"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+)
+
+func GetGRPC(l *zap.Logger, regist func(grpc.ServiceRegistrar)) *grpc.Server {
+	grpcServer := grpc.NewServer(
+		grpc_middleware.WithUnaryServerChain(
+			grpc_recovery.UnaryServerInterceptor(), // add panic recovery
+			grpc_zap.UnaryServerInterceptor(l),     // add log
+		),
+		grpc_middleware.WithStreamServerChain(
+			grpc_recovery.StreamServerInterceptor(), // add panic recovery
+			grpc_zap.StreamServerInterceptor(l),     // add log
+		),
+	)
+
+	// 注册各个 grpc service 服务
+	regist(grpcServer)
+
+	// Register reflection service on gRPC server.
+	reflection.Register(grpcServer)
+	return grpcServer
+}

@@ -1,0 +1,40 @@
+package application
+
+import (
+	"context"
+	"fmt"
+	"net"
+
+	"go.uber.org/zap"
+	"google.golang.org/grpc"
+)
+
+func (app *Application) WithGRPC(gs *grpc.Server, port int) *Application {
+	app.appSrvs = append(app.appSrvs, newGRPCServer(gs, port))
+	return app
+}
+
+type grpcServer struct {
+	gc   *grpc.Server
+	addr string
+}
+
+func newGRPCServer(gc *grpc.Server, port int) *grpcServer {
+	return &grpcServer{
+		gc:   gc,
+		addr: fmt.Sprintf(":%d", port),
+	}
+}
+
+func (gs *grpcServer) Run(ctx context.Context, log *zap.Logger) error {
+	lis, err := net.Listen("tcp", gs.addr)
+	if err != nil {
+		return err
+	}
+	log.Info("Grpc start.", zap.String("addr", gs.addr))
+	return gs.gc.Serve(lis)
+}
+
+func (gs *grpcServer) Stop(ctx context.Context, log *zap.Logger) {
+	gs.gc.Stop()
+}

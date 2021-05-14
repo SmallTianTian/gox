@@ -60,6 +60,33 @@ func GoFmtCode(path string) bool {
 	return true
 }
 
+// GoBufGen 通过 buf 生成 grpc 代码
+func GoBufGen(path string) bool {
+	if !CheckCommandExists("buf") {
+		logger.Error("Couldn't find command `buf`. See: https://docs.buf.build/installation")
+		return false
+	}
+	if err := Exec(path, "buf", "generate"); err != nil {
+		logger.Errorf("Buf generate grpc code failed.\n Please exec `buf generate` in `%s`.\n Error: %v", path, err)
+		return false
+	}
+	return true
+}
+
+// GoWireGen 通过 wire 生成代码
+func GoWireGen(path string) bool {
+	GoModRebuild(path)
+	if !CheckCommandExists("wire") {
+		logger.Error("Couldn't find command `wire`. See: https://github.com/google/wire")
+		return false
+	}
+	if err := Exec(path, "wire", "./..."); err != nil {
+		logger.Errorf("Wire generate code failed.\n Please exec `wire ./...` in `%s`.\n Error: %v", path, err)
+		return false
+	}
+	return true
+}
+
 // GetOrganizationAndProjectName 从地址中获取组织名和项目名。
 // 只查看 go.mod 文件，不包含任何 go 文件也可正常获取.
 func GetOrganizationAndProjectName(path string) (org, pro string) {

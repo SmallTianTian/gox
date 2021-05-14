@@ -1,0 +1,6 @@
+package repo
+
+import "github.com/google/wire"
+
+var userImplBind = wire.Bind(new(UserRepo), new(*UserImpl))
+var RepoSet = wire.NewSet(NewRedisClient, NewUserRepo, userImplBind)

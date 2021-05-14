@@ -1,0 +1,33 @@
+package server
+
+import (
+	"context"
+	"fmt"
+
+	"{{.module}}/internal/conf"
+	"{{.module}}/pkg/logger"
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc"
+)
+
+func registEachProxy(ctx context.Context, mux *runtime.ServeMux, port string, opts []grpc.DialOption) []error {
+	return []error{
+	}
+}
+
+func GetProxy(config *conf.Config) *runtime.ServeMux {
+	mux := runtime.NewServeMux()
+	opts := []grpc.DialOption{
+		grpc.WithInsecure(),
+	}
+
+	grpcPort := fmt.Sprintf(":%d", config.Port.GRPC)
+
+	errs := registEachProxy(context.Background(), mux, grpcPort, opts)
+	for _, err := range errs {
+		if err != nil {
+			logger.Fatal("Regist proxy failed.", err)
+		}
+	}
+	return mux
+}

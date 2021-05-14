@@ -1,0 +1,41 @@
+package application
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"go.uber.org/zap"
+)
+
+func (app *Application) WithProxy(r *runtime.ServeMux, port int) *Application { // nolint, 强制需要这个类型，用来区分 http
+	app.appSrvs = append(app.appSrvs, newProxyServer(r, port))
+	return app
+}
+
+type proxyServer struct {
+	hs *http.Server
+}
+
+func newProxyServer(proxyMux http.Handler, port int) *proxyServer {
+	hs := &http.Server{
+		Addr:    fmt.Sprintf(":%d", port),
+		Handler: proxyMux,
+	}
+	return &proxyServer{
+		hs: hs,
+	}
+}
+
+func (ps *proxyServer) Run(ctx context.Context, log *zap.Logger) error {
+	log.Info("Grpc proxy start.", zap.String("addr", ps.hs.Addr))
+	return ps.hs.ListenAndServe()
+}
+
+func (ps *proxyServer) Stop(ctx context.Context, log *zap.Logger) {
+	err := ps.hs.Shutdown(ctx)
+	if err = handleError(err); err != nil {
+		log.Error("Grpc proxy stop failed.", zap.Error(err))
+	}
+}

@@ -1,0 +1,15 @@
+package repo
+
+import (
+	"context"
+
+	"{{.module}}/ent"
+)
+
+type UserRepo interface {
+	Insert(ctx context.Context, dbu *ent.UserClient, u *ent.User) (*ent.User, func(), error)
+	Del(ctx context.Context, dbu *ent.UserClient, id int) (func(), error)
+	Update(ctx context.Context, dbu *ent.UserClient, u *ent.User) (func(), error)
+	Get(ctx context.Context, dbu *ent.UserClient, id int) (*ent.User, func(), error)
+	List(ctx context.Context, dbu *ent.UserClient, condition *ent.User, limit, offset int) ([]*ent.User, int, error)
+}

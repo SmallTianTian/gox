@@ -1,0 +1,43 @@
+package repo
+
+import (
+	"context"
+
+	"{{.module}}/internal/conf"
+	"github.com/go-redis/redis/v8"
+	"go.uber.org/zap"
+)
+
+// NewRedisClient 新建一个 reids 客户端
+func NewRedisClient(c *conf.Config, log *zap.Logger) (*redis.Client, func(), error) {
+	client := redis.NewClient(&redis.Options{
+		Addr:     c.Redis.ConnStr,
+		Password: c.Redis.PWD,
+		DB:       c.Redis.DB,
+	})
+
+	// 这里先 ping 一下 redis，看是否能连接
+	// 这里的上下文使用的是默认的，可以按需改成带 timeout 的
+	if err := client.Ping(context.Background()).Err(); err != nil {
+		return nil, nil, err
+	}
+
+	close := func() {
+		if err := client.Close(); err != nil {
+			log.Error("Close db failed.", zap.Error(err))
+		}
+	}
+
+	return client, close, nil
+}
+
+// type Cache interface {
+// 	Set(k string, v interface{}) error
+// 	Del(k ...string) error
+// 	Get(k string, v interface{}) error
+// 	Exist(k string) (bool, error)
+
+// 	MSet(data map[string]interface{}) error
+// 	MGet(data map[string]interface{}) error
+// 	MExist(k ...string) (map[string]bool, error)
+// }

@@ -1,0 +1,20 @@
+package grpc
+
+import (
+	demo "{{.module}}/api/demo/v1"
+	user "{{.module}}/api/user/v1"
+	"github.com/google/wire"
+	"google.golang.org/grpc"
+)
+
+var demoProvider = wire.NewSet(NewV1DemoService, wire.Bind(new(demo.DemoServiceServer), new(*V1DemoService)))
+var userProvider = wire.NewSet(NewV1UserService, wire.Bind(new(user.UserServiceServer), new(*V1UserService)))
+
+var GRPCsProvider = wire.NewSet(demoProvider, userProvider)
+
+func RegistGRPCS(demoS demo.DemoServiceServer, userS user.UserServiceServer) func(grpc.ServiceRegistrar) {
+	return func(sr grpc.ServiceRegistrar) {
+		demo.RegisterDemoServiceServer(sr, demoS)
+		user.RegisterUserServiceServer(sr, userS)
+	}
+}

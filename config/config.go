@@ -22,21 +22,21 @@ type Config struct {
 	}
 	// 项目相关配置
 	Project struct {
-		New     bool   // 是否是新项目
-		EnvPath string // 环境变量中的项目路径
-		Path    string // 项目本地路径
-		EnvOrg  string // 环境变量中的组织
-		Org     string // 项目组织
-		Name    string // 项目名称
-		Vendor  bool   // 是否启用 vendor
+		New    bool   // 是否是新项目
+		Path   string // 项目本地路径
+		Org    string // 项目组织
+		Name   string // 项目名称
+		Vendor bool   // 是否启用 vendor
 	}
-	// HTTP 相关配置
-	HTTP struct {
-		Port int // HTTP 监听端口
+	// 框架支持的能力
+	FrameEnable struct {
+		HTTP  bool
+		GRPC  bool
+		Proxy bool
 	}
-	GRPC struct {
-		Port  int // GRPC 监听端口
-		Proxy int // GRPC 代理监听端口
+	// 适配器，可以替换的组件变量应该在这里标识
+	Adapter struct {
+		Logger string // 使用哪个日志系统，目前支持 zap、logrus
 	}
 }
 
@@ -73,16 +73,14 @@ func complementProjectInfo() {
 	dir, err := os.Getwd()
 	utils.MustNotError(err)
 
-	DefaultConfig.Project.Path = dir
-
 	// 如果没有从配置文件中读到路径，则用当前地址填充
-	if DefaultConfig.Project.EnvPath == "" {
-		DefaultConfig.Project.EnvPath = DefaultConfig.Project.Path
+	if DefaultConfig.Project.Path == "" {
+		DefaultConfig.Project.Path = dir
 	}
 	// 当不是 Go 项目，将直接返回
 	if !utils.CheckGoProject(dir) {
-		if DefaultConfig.Project.EnvOrg == "" {
-			DefaultConfig.Project.EnvOrg = "github.com"
+		if DefaultConfig.Project.Org == "" {
+			DefaultConfig.Project.Org = "github.com"
 		}
 		return
 	}
@@ -94,7 +92,6 @@ func complementProjectInfo() {
 	DefaultConfig.Project.New = false
 	DefaultConfig.Project.Vendor = utils.CheckUseVendor(dir)
 
-	if DefaultConfig.Project.EnvOrg == "" && DefaultConfig.Project.Org != "" {
-		DefaultConfig.Project.EnvOrg = DefaultConfig.Project.Org
-	}
+	// 当前是 go 项目，则重新设置 path 为当前路径
+	DefaultConfig.Project.Path = dir
 }

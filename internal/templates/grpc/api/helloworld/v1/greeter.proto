@@ -1,0 +1,24 @@
+// example from https://github.com/grpc-ecosystem/grpc-gateway/blob/master/examples/internal/helloworld/helloworld.proto
+syntax = "proto3";
+
+package api.helloworld.v1;
+
+option go_package = "api/helloworld/v1";
+
+import "google/api/annotations.proto";
+
+service GreeterService {
+  rpc SayHello (SayHelloRequest) returns (SayHelloResponse) {
+    option (google.api.http) = {
+      get: "/say/{name}"
+    };
+  }
+}
+
+message SayHelloRequest {
+  string name = 1;
+}
+
+message SayHelloResponse {
+  string message = 1;
+}

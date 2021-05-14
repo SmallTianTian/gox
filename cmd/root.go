@@ -3,11 +3,12 @@ package cmd
 import (
 	"github.com/SmallTianTian/fresh-go/config"
 	"github.com/SmallTianTian/fresh-go/pkg/logger"
+	"github.com/SmallTianTian/fresh-go/utils"
 	"github.com/spf13/cobra"
 )
 
 var (
-	commands = []*cobra.Command{versionCmd, newCmd, httpCmd, grpcCmd, doctorCmd}
+	commands = []*cobra.Command{versionCmd, newCmd, doctorCmd}
 )
 
 var rootCmd = &cobra.Command{
@@ -29,6 +30,7 @@ func init() {
 	cobra.OnInitialize(func() {
 		logger.InitLogger(config.DefaultConfig.Logger.Level)
 	})
+
 	initDebug()
 	initRegister()
 }
@@ -49,8 +51,16 @@ func initDebug() {
 	}
 }
 
+// 最初的工作准备
 func prepare() {
 	if debug {
 		logger.InitLogger("debug")
 	}
+}
+
+// 最后的整理工作
+func finally() {
+	dir := config.DefaultConfig.Project.Path
+	utils.GoModRebuild(dir)
+	utils.GoFmtCode(dir)
 }

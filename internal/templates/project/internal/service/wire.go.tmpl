@@ -1,0 +1,6 @@
+package service
+
+import "github.com/google/wire"
+
+var userImplBind = wire.Bind(new(UserService), new(*UserImpl))
+var ServiceSet = wire.NewSet(NewUserImpl, userImplBind)

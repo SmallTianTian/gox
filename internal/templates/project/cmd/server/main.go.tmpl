@@ -1,0 +1,50 @@
+package main
+
+import (
+	"context"
+
+	"{{.module}}/internal/conf"
+	"{{.module}}/pkg/application"
+	"{{.module}}/pkg/logger"
+	"go.uber.org/zap"
+)
+
+var (
+	Version     string
+	BuildTime   string
+	GoVersion   string
+	GitRevision string
+)
+
+func main() {
+	// 1. 初始化配置文件
+	config := conf.InitConfig()
+	// 2. 初始化日志
+	log := logger.InitZap(config.Logger.App, config.Logger.Level)
+	// 3. 打印版本信息
+	printVerion(log)
+
+	// 4. 构建 app
+	app := initApp(config, log)
+
+	// 5. 启动 app
+	app.Up()
+
+	// 6. app 优雅退出
+	if rerr := app.WaitForShuttdown(); rerr != nil {
+		log.Error("Run app error.", zap.Error(rerr))
+	}
+
+	log.Info("Stop server. Bye~")
+}
+
+func printVerion(log *zap.Logger) {
+	log.Info("Version: " + Version)
+	log.Info("Build time: " + BuildTime)
+	log.Info("Go version: " + GoVersion)
+	log.Info("Commit hash: " + GitRevision)
+}
+
+func NewApplication(log *zap.Logger, config *conf.Config) *application.Application {
+	return application.NewApplication(context.Background(), log)
+}

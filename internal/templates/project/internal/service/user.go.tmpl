@@ -1,0 +1,54 @@
+package service
+
+import (
+	"context"
+
+	"{{.module}}/ent"
+	"{{.module}}/internal/repo"
+	"go.uber.org/zap"
+)
+
+type UserImpl struct {
+	rp  repo.UserRepo
+	db  *ent.Client
+	log *zap.Logger
+}
+
+func NewUserImpl(rp repo.UserRepo, db *ent.Client, log *zap.Logger) *UserImpl {
+	return &UserImpl{
+		rp:  rp,
+		db:  db,
+		log: log,
+	}
+}
+
+func (ui *UserImpl) CreateUser(ctx context.Context, u *ent.User) (*ent.User, error) {
+	fu, cacheF, err := ui.rp.Insert(ctx, ui.db.User, u)
+	cacheF()
+	return fu, err
+}
+
+func (ui *UserImpl) DeleteUser(ctx context.Context, id int) error {
+	cacheF, err := ui.rp.Del(ctx, ui.db.User, id)
+	cacheF()
+	return err
+}
+
+func (ui *UserImpl) UpdateUser(ctx context.Context, u *ent.User) (*ent.User, error) {
+	cacheF, err := ui.rp.Update(ctx, ui.db.User, u)
+	if err != nil {
+		return nil, err
+	}
+	cacheF()
+	return ui.GetUser(ctx, u.ID)
+}
+
+func (ui *UserImpl) GetUser(ctx context.Context, id int) (*ent.User, error) {
+	fu, cacheF, err := ui.rp.Get(ctx, ui.db.User, id)
+	cacheF()
+	return fu, err
+}
+
+func (ui *UserImpl) ListUser(ctx context.Context, u *ent.User, limit, offset int) ([]*ent.User, int, error) {
+	return ui.rp.List(ctx, ui.db.User, u, limit, offset)
+}

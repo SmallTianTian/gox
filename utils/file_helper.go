@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/SmallTianTian/fresh-go/model"
 	"github.com/SmallTianTian/fresh-go/pkg/logger"
 )
 
@@ -68,11 +69,11 @@ func IsExist(path string) bool {
 	return err == nil || os.IsExist(err)
 }
 
-func WriteByTemplate(path string, fileAndTmpl map[string]string, keyAndRealValue map[string]interface{}) {
-	for file, tmpl := range fileAndTmpl {
-		realContent, err := StringFormat(tmpl, keyAndRealValue)
+func WriteByTemplate(path string, keyAndRealValue map[string]interface{}, fts ...*model.FileTemp) {
+	for _, ft := range fts {
+		realContent, err := StringFormat(ft.Content, keyAndRealValue)
 		MustNotError(err)
-		OverwritingFile(path, file, realContent)
-		logger.Debugf("Write file `%s` to `%s` `%d` byte successful.", file, path, len(realContent))
+		OverwritingFile(path, ft.Name, realContent)
+		logger.Debugf("Write file `%s` to `%s` `%d` byte successful.", ft.Name, path, len(realContent))
 	}
 }

@@ -1,0 +1,162 @@
+package repo
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"time"
+
+	"{{.module}}/ent"
+	"{{.module}}/ent/user"
+	"{{.module}}/pkg/logger"
+	"github.com/go-redis/redis/v8"
+	"go.uber.org/zap"
+)
+
+var emptyFunc = func() {}
+
+type UserImpl struct {
+	cache *redis.Client
+	log   *zap.Logger
+}
+
+func NewUserRepo(l *zap.Logger, c *redis.Client) *UserImpl {
+	return &UserImpl{
+		cache: c,
+		log:   l.Named("repo.user"),
+	}
+}
+
+func (ui *UserImpl) Insert(ctx context.Context, dbu *ent.UserClient, u *ent.User) (*ent.User, func(), error) {
+	// 0. 参数检查
+	if u == nil {
+		return nil, emptyFunc, errors.New("empty user")
+	}
+
+	// 1. 插入数据库
+	freshU, err := dbu.Create().
+		SetName(u.Name).
+		Save(ctx)
+	if err != nil {
+		return nil, emptyFunc, err
+	}
+
+	// 2. 做缓存
+	cacheF := func() {
+		cacheKey := fmt.Sprintf("user-%d", freshU.ID)
+		expiration := time.Duration(0)
+		if err = ui.cache.Set(ctx, cacheKey, freshU, expiration).Err(); err != nil {
+			ui.log.Error("Set user cache failed.", logger.WithCtx(ctx, zap.Error(err))...)
+		}
+	}
+	return freshU, cacheF, err
+}
+
+func (ui *UserImpl) Del(ctx context.Context, dbu *ent.UserClient, id int) (func(), error) {
+	// 0. 参数检查
+	if id <= 0 {
+		return emptyFunc, errors.New("bad id")
+	}
+
+	// 1. 删除数据库
+	if err := dbu.DeleteOneID(id).Exec(ctx); err != nil {
+		return emptyFunc, err
+	}
+
+	// 2. 从缓存中删除，可能在一定时间内能访问到缓存数据，
+	// 但最终一定是会都访问不到
+	cacheF := func() {
+		cacheKey := fmt.Sprintf("user-%d", id)
+		if err := ui.cache.Del(ctx, cacheKey).Err(); err != nil {
+			ui.log.Error("Del user cache failed.", logger.WithCtx(ctx, zap.Error(err))...)
+		}
+	}
+	return cacheF, nil
+}
+
+func (ui *UserImpl) Update(ctx context.Context, dbu *ent.UserClient, u *ent.User) (func(), error) {
+	// 0. 参数检查
+	if u == nil || u.ID <= 0 {
+		return emptyFunc, errors.New("bad update user")
+	}
+
+	// 1. 先更新数据库
+	ui.log.Info(u.String())
+	if err := dbu.UpdateOneID(u.ID).SetName(u.Name).Exec(ctx); err != nil {
+		return emptyFunc, err
+	}
+
+	// 2. 从缓存中删除，后续查询重新做缓存
+	cacheF := func() {
+		cacheKey := fmt.Sprintf("user-%d", u.ID)
+		if err := ui.cache.Del(ctx, cacheKey).Err(); err != nil {
+			ui.log.Error("Del user cache failed.", logger.WithCtx(ctx, zap.Error(err))...)
+		}
+	}
+	return cacheF, nil
+}
+
+func (ui *UserImpl) Get(ctx context.Context, dbu *ent.UserClient, id int) (*ent.User, func(), error) {
+	// 0. 参数检查
+	if id <= 0 {
+		return nil, emptyFunc, errors.New("bad id")
+	}
+
+	// 1. 从缓存中获取，没错就返回
+	cacheKey := fmt.Sprintf("user-%d", id)
+	var u ent.User
+	if err := ui.cache.Get(ctx, cacheKey).Scan(&u); err == nil {
+		return &u, emptyFunc, err
+	}
+
+	// 2. 任何错误都将走到数据库
+	// *注意*：可能发生缓存穿透
+	dbU, err := dbu.Get(ctx, id)
+	if err != nil {
+		return nil, emptyFunc, err
+	}
+
+	// 3. 重做缓存
+	cacheF := func() {
+		expiration := time.Duration(0)
+		if err = ui.cache.Set(ctx, cacheKey, dbU, expiration).Err(); err != nil {
+			ui.log.Error("Set user cache failed.", logger.WithCtx(ctx, zap.Error(err))...)
+		}
+	}
+
+	return dbU, cacheF, err
+}
+
+func (ui *UserImpl) List(ctx context.Context, dbu *ent.UserClient, condition *ent.User, limit, offset int) ([]*ent.User, int, error) {
+	// 0. 参数检查
+	if condition == nil {
+		return nil, 0, errors.New("bad condition")
+	}
+
+	// 1. 重置 limit/offset
+	if offset < 0 {
+		offset = 0
+	}
+	if limit == 0 || // 没有设置 limit
+		(limit < 0 && limit != -1) || // 设置了非 -1 的 limit
+		limit > 100 { // limit 超大，大于 100
+		limit = 10
+	}
+
+	// 2. （可选）如果缓存做的好，这里可以直接从缓存中获取
+	// 3. 从数据库中查询
+	uq := dbu.Query().
+		Where(user.NameContainsFold(condition.Name)) // 这里可以有多个条件
+
+	total, err := uq.Count(ctx) // 查询总量
+	if err != nil {
+		return nil, 0, err
+	}
+
+	users, err := uq.
+		Limit(limit).
+		Offset(offset).
+		// Select("name"). // 可以选择只查询什么内容，避免查询整行数据
+		All(ctx)
+	return users, total, err
+}

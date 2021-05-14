@@ -1,7 +1,5 @@
 package logger
 
-import "github.com/sirupsen/logrus"
-
 type Logger interface {
 	Debug(args ...interface{})
 	Debugf(template string, args ...interface{})
@@ -18,7 +16,7 @@ type Logger interface {
 var instance Logger
 
 func Debug(args ...interface{}) {
-	instance.Debug(args)
+	instance.Debug(args...)
 }
 
 func Debugf(template string, args ...interface{}) {
@@ -26,7 +24,7 @@ func Debugf(template string, args ...interface{}) {
 }
 
 func Error(args ...interface{}) {
-	instance.Error(args)
+	instance.Error(args...)
 }
 
 func Errorf(template string, args ...interface{}) {
@@ -34,7 +32,7 @@ func Errorf(template string, args ...interface{}) {
 }
 
 func Fatal(args ...interface{}) {
-	instance.Fatal(args)
+	instance.Fatal(args...)
 }
 
 func Fatalf(template string, args ...interface{}) {
@@ -42,7 +40,7 @@ func Fatalf(template string, args ...interface{}) {
 }
 
 func Info(args ...interface{}) {
-	instance.Info(args)
+	instance.Info(args...)
 }
 
 func Infof(template string, args ...interface{}) {
@@ -50,36 +48,9 @@ func Infof(template string, args ...interface{}) {
 }
 
 func Warn(args ...interface{}) {
-	instance.Warn(args)
+	instance.Warn(args...)
 }
 
 func Warnf(template string, args ...interface{}) {
 	instance.Warnf(template, args...)
-}
-
-func InitLogger(logLevel string) {
-	initLogrus(logLevel)
-}
-
-func initLogrus(logLevel string) {
-	logEntry := logrus.New()
-	level, err := logrus.ParseLevel(logLevel)
-	if err != nil {
-		logrus.WithError(err).Error("Error parsing log level, using: info")
-		level = logrus.InfoLevel
-	}
-	logEntry.Level = level
-	Formatter := new(logrus.TextFormatter)
-	Formatter.TimestampFormat = "20060102T15:04:05.999"
-	Formatter.FullTimestamp = true
-	logEntry.SetFormatter(Formatter)
-	instance = logEntry
-}
-
-// Get original instance.
-func Logrus() *logrus.Entry {
-	if entry, ok := instance.(*logrus.Entry); ok {
-		return entry
-	}
-	return nil
 }

@@ -1,0 +1,47 @@
+package conf
+
+import (
+	"log"
+	"os"
+	"strings"
+
+	"github.com/spf13/viper"
+)
+
+type Config struct {
+	Logger struct {
+		App   string
+		Level string // 日志级别
+	}
+}
+
+// InitConfig 初始化本地配置文件。
+//
+// 将依次在如下目录中查找 `config.yaml`。
+//
+// 1. 环境变量 CONFIG_PATH 申明目录
+// 2. 相较于当前路径的 configs 目录
+// 3. 当前目录
+func InitConfig() *Config {
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(os.Getenv("CONFIG_PATH"))
+	viper.AddConfigPath("configs")
+	viper.AddConfigPath(".")
+
+	if err := viper.ReadInConfig(); err != nil {
+		log.Fatalf("Read config failed. ERR: %v", err)
+	}
+	// bind config value from env
+	viper.SetEnvPrefix("{{.projectName}}")
+	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
+	viper.AutomaticEnv()
+
+	var conf Config
+	if err := viper.Unmarshal(&conf); err != nil {
+		log.Fatalf("Unmarshal config failed. ERR: %v", err)
+	}
+	log.Println("Use config:", viper.ConfigFileUsed())
+
+	return &conf
+}

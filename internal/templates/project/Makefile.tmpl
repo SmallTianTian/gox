@@ -1,45 +1,41 @@
-version = v0.0.0
-go_flags = {{.modVendor}} -ldflags "-w -s -X 'main.Version=$(Version)' -X 'main.BuildTime=`date "+%Y-%m-%d %H:%M:%S"`' -X 'main.GoVersion=`go version`' -X 'main.GitRevision=`git rev-parse HEAD`'"
-ARMS = 5 6 7
-MIPSS = mips mipsle
+VERSION=$(shell git describe --tags --always)
+{{if .vendor -}}
+GO_FLAGS= -mod vendor -ldflags "-w -s -X 'main.Version=$(VERSION)' -X 'main.BuildTime=`date "+%Y-%m-%d %H:%M:%S"`' -X 'main.GoVersion=`go version`' -X 'main.GitRevision=`git rev-parse HEAD`'"
+{{- else -}}
+GO_FLAGS= -ldflags "-w -s -X 'main.Version=$(VERSION)' -X 'main.BuildTime=`date "+%Y-%m-%d %H:%M:%S"`' -X 'main.GoVersion=`go version`' -X 'main.GitRevision=`git rev-parse HEAD`'"
+{{- end}}
 
-.PHONY: i b c r run install build compile clean
+.PHONY: build check clean test mod tidy run
 
-# short comment
-r: run
-i: install
-b: build
-c: clean
+build: test clean
+	@go build $(GO_FLAGS) -o ./bin/ ./...
+
+tidy: generate mod
+	@gofmt -s -w .
+
+check:
+	@go vet ./...
+	@golangci-lint run
+
+test: check mod
+	{{ if .vendor -}}
+	@go test -mod vendor -cover ./...
+	{{- else -}}
+	@go test -cover ./...
+	{{- end}}
+
+mod:
+	@go mod tidy
+	{{- if .vendor -}}
+	@go mod vendor
+	{{- end}}
+
+generate:
+	@wire ./...
+	@go generate ./...
 
 run: build
-	@./bin/{{.projectName}} base
-
-install:
-	@go install ${go_flags}
-
-build:
-	@go build ${go_flags} -o ./bin/{{.projectName}}
-
-compile:
-# mac
-	@GOOS=darwin GOARCH=amd64 go build $(go_flags) -o ./bin/{{.projectName}}_darwin_amd64_${version}
-# windows
-	@GOOS=windows GOARCH=amd64 go build $(go_flags) -o ./bin/{{.projectName}}_windows_amd64_${version}.exe
-	@GOOS=windows GOARCH=386 go build $(go_flags) -o ./bin/{{.projectName}}_windows_386_${version}.exe
-# freebsd
-	@GOOS=freebsd GOARCH=amd64 go build $(go_flags) -o ./bin/{{.projectName}}_freebsd_amd64_${version}
-	@GOOS=freebsd GOARCH=386 go build $(go_flags) -o ./bin/{{.projectName}}_freebsd_386_${version}
-# linux
-	@GOOS=linux GOARCH=amd64 go build $(go_flags) -o ./bin/{{.projectName}}_linux_amd64_${version}
-	@GOOS=linux GOARCH=386 go build $(go_flags) -o ./bin/{{.projectName}}_linux_386_${version}
-	@for v in ${ARMS}; do \
-		CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=$$v go build $(go_flags) -o ./bin/{{.projectName}}_linux_arm$${v}_${version}; \
-	done;
-	@CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build $(go_flags) -o ./bin/{{.projectName}}_linux_arm64_${version}
-	@for v in ${MIPSS}; do \
-		CGO_ENABLED=0 GOOS=linux GOARCH=$$v go build $(go_flags) -o ./bin/{{.projectName}}_linux_$${v}_${version}; \
-		CGO_ENABLED=0 GOOS=linux GOARCH=$$v GOMIPS=softfloat go build $(go_flags) -o ./bin/{{.projectName}}_linux_$${v}_sf_${version}; \
-	done
+	@bin/server
 
 clean:
 	@rm -rf ./bin

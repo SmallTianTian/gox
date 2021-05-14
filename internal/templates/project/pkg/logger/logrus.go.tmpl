@@ -1,0 +1,28 @@
+package logger
+
+import (
+	"time"
+
+	"github.com/sirupsen/logrus"
+)
+
+func InitLogger(app, logLevel string) {
+	InitLogrus(app, logLevel)
+}
+
+// InitLogrus init logrus as instance.
+func InitLogrus(app, logLevel string) *logrus.Entry {
+	logEntry := logrus.New()
+	level, err := logrus.ParseLevel(logLevel)
+	if err != nil {
+		logrus.WithError(err).Error("Error parsing log level, using: info")
+		level = logrus.InfoLevel
+	}
+	logEntry.Level = level
+	Formatter := new(logrus.JSONFormatter)
+	Formatter.TimestampFormat = time.RFC3339
+	logEntry.SetFormatter(Formatter)
+	log := logEntry.WithField("app", app)
+	instance = log
+	return log
+}
