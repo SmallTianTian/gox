@@ -12,23 +12,23 @@ import (
 )
 
 var base = []*model.FileTemp{
-	{Name: "cmd/server/main.go", Content: templates.ReadTemplateFile("project/cmd/server/main.go.tmpl")},
-	{Name: "cmd/server/wire.go", Content: templates.ReadTemplateFile("project/cmd/server/wire.go.tmpl")},
-	{Name: "configs/config.yaml", Content: templates.ReadTemplateFile("project/configs/config.yaml.tmpl")},
-	{Name: "githooks/commit-msg", Content: templates.ReadTemplateFile("project/githooks/commit-msg")},
-	{Name: "githooks/go_pre_commit.sh", Content: templates.ReadTemplateFile("project/githooks/go_pre_commit.sh")},
-	{Name: "githooks/pre-commit", Content: templates.ReadTemplateFile("project/githooks/pre-commit")},
-	{Name: "internal/conf/config.go", Content: templates.ReadTemplateFile("project/internal/conf/config.go.tmpl")},
-	{Name: "pkg/application/app_server.go", Content: templates.ReadTemplateFile("project/pkg/application/app_server.go.tmpl")}, // nolint
-	{Name: "pkg/application/app.go", Content: templates.ReadTemplateFile("project/pkg/application/app.go.tmpl")},
-	{Name: "pkg/logger/logger.go", Content: templates.ReadTemplateFile("project/pkg/logger/logger.go.tmpl")},
-	{Name: ".gitignore", Content: templates.ReadTemplateFile("project/.gitignore.tmpl")},
-	{Name: "Makefile", Content: templates.ReadTemplateFile("project/Makefile.tmpl")},
+	{Name: "cmd/server/main.go", Content: templates.ReadTemplateFile("cmd/server/main.go.tmpl")},
+	{Name: "cmd/server/wire.go", Content: templates.ReadTemplateFile("cmd/server/wire.go.tmpl")},
+	{Name: "configs/config.yaml", Content: templates.ReadTemplateFile("configs/config.yaml.tmpl")},
+	{Name: "githooks/commit-msg", Content: templates.ReadTemplateFile("githooks/commit-msg")},
+	{Name: "githooks/go_pre_commit.sh", Content: templates.ReadTemplateFile("githooks/go_pre_commit.sh")},
+	{Name: "githooks/pre-commit", Content: templates.ReadTemplateFile("githooks/pre-commit")},
+	{Name: "internal/conf/config.go", Content: templates.ReadTemplateFile("internal/conf/config.go.tmpl")},
+	{Name: "pkg/application/app_server.go", Content: templates.ReadTemplateFile("pkg/application/app_server.go.tmpl")}, // nolint
+	{Name: "pkg/application/app.go", Content: templates.ReadTemplateFile("pkg/application/app.go.tmpl")},
+	{Name: "pkg/logger/logger.go", Content: templates.ReadTemplateFile("pkg/logger/logger.go.tmpl")},
+	{Name: ".gitignore", Content: templates.ReadTemplateFile(".gitignore.tmpl")},
+	{Name: "Makefile", Content: templates.ReadTemplateFile("Makefile.tmpl")},
 }
 
 var log = map[string]*model.FileTemp{
-	"zap":    {Name: "pkg/logger/zap.go", Content: templates.ReadTemplateFile("project/pkg/logger/zap.go.tmpl")},
-	"logrus": {Name: "pkg/logger/logrus.go", Content: templates.ReadTemplateFile("project/pkg/logger/logrus.go.tmpl")},
+	"zap":    {Name: "pkg/logger/zap.go", Content: templates.ReadTemplateFile("pkg/logger/zap.go.tmpl")},
+	"logrus": {Name: "pkg/logger/logrus.go", Content: templates.ReadTemplateFile("pkg/logger/logrus.go.tmpl")},
 }
 
 func NewProject() {

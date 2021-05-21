@@ -62,8 +62,8 @@ func initProxy() {
 	// 初始化 server/proxy.go
 	mod := filepath.Join(config.DefaultConfig.Project.Org, config.DefaultConfig.Project.Name)
 	base := []*model.FileTemp{
-		{Name: "pkg/application/proxy_server.go", Content: templates.ReadTemplateFile("project/pkg/application/proxy_server.go.tmpl")},
-		{Name: "internal/server/proxy.go", Content: templates.ReadTemplateFile("grpc/internal/server/proxy.go.tmpl")},
+		{Name: "pkg/application/proxy_server.go", Content: templates.ReadTemplateFile("pkg/application/proxy_server.go.tmpl")},
+		{Name: "internal/server/proxy.go", Content: templates.ReadTemplateFile("internal/server/proxy.go.tmpl")},
 	}
 	utils.WriteByTemplate(dir, map[string]interface{}{"module": mod}, base...)
 

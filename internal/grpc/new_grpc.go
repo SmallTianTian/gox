@@ -62,14 +62,14 @@ func baseGRPCnew(name, alias string, f func()) {
 }
 
 var optionMap = map[string]*model.FileTemp{
-	"impl_wire":   {Name: "internal/ui/grpc/wire.go", Content: templates.ReadTemplateFile("grpc/internal/ui/grpc/init_wire.go.tmpl")},              // nolint
-	"grpc_server": {Name: "internal/server/grpc.go", Content: templates.ReadTemplateFile("grpc/internal/server/grpc.go.tmpl")},                     // nolint
-	"server_wire": {Name: "internal/server/wire.go", Content: templates.ReadTemplateFile("grpc/internal/server/init_wire.go.tmpl")},                // nolint
-	"app":         {Name: "pkg/application/grpc_server.go", Content: templates.ReadTemplateFile("project/pkg/application/grpc_server.go.tmpl")},    // nolint
-	"demo_proto":  {Name: "api/helloworld/v1/greeter.proto", Content: templates.ReadTemplateFile("grpc/api/helloworld/v1/greeter.proto")},          // nolint
-	"demo_impl":   {Name: "internal/ui/grpc/helloworld_v1.go", Content: templates.ReadTemplateFile("grpc/internal/ui/grpc/helloworld_v1.go.tmpl")}, // nolint
-	"buf":         {Name: "buf.yaml", Content: templates.ReadTemplateFile("project/buf.yaml.tmpl")},                                                // nolint
-	"buf_gen":     {Name: "buf.gen.yaml", Content: templates.ReadTemplateFile("project/buf.gen.yaml.tmpl")},                                        // nolint
+	"impl_wire":   {Name: "internal/ui/grpc/wire.go", Content: templates.ReadTemplateFile("internal/ui/grpc/wire.go.tmpl")},                   // nolint
+	"grpc_server": {Name: "internal/server/grpc.go", Content: templates.ReadTemplateFile("internal/server/grpc.go.tmpl")},                     // nolint
+	"server_wire": {Name: "internal/server/wire.go", Content: templates.ReadTemplateFile("internal/server/wire.go.tmpl")},                     // nolint
+	"app":         {Name: "pkg/application/grpc_server.go", Content: templates.ReadTemplateFile("pkg/application/grpc_server.go.tmpl")},       // nolint
+	"demo_proto":  {Name: "api/helloworld/v1/greeter.proto", Content: templates.ReadTemplateFile("api/helloworld/v1/greeter.proto")},          // nolint
+	"demo_impl":   {Name: "internal/ui/grpc/helloworld_v1.go", Content: templates.ReadTemplateFile("internal/ui/grpc/helloworld_v1.go.tmpl")}, // nolint
+	"buf":         {Name: "buf.yaml", Content: templates.ReadTemplateFile("buf.yaml.tmpl")},                                                   // nolint
+	"buf_gen":     {Name: "buf.gen.yaml", Content: templates.ReadTemplateFile("buf.gen.yaml.tmpl")},                                           // nolint
 }
 
 func existGRPC(pro string) bool {

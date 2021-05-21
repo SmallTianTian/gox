@@ -1,7 +1,6 @@
 package server
 
 import (
-	"{{.module}}/internal/conf"
 	grpc_middleware "github.com/grpc-ecosystem/go-grpc-middleware"
 	"go.uber.org/zap"
 
@@ -11,11 +10,11 @@ import (
 	"google.golang.org/grpc/reflection"
 )
 
-func GetGRPC(config *conf.Config, l *zap.Logger, regist func(grpc.ServiceRegistrar)) *grpc.Server {
+func GetGRPC(l *zap.Logger, regist func(grpc.ServiceRegistrar)) *grpc.Server {
 	grpcServer := grpc.NewServer(
 		grpc_middleware.WithUnaryServerChain(
-			// grpc_recovery.UnaryServerInterceptor(), // add panic recovery
-			grpc_zap.UnaryServerInterceptor(l), // add log
+			grpc_recovery.UnaryServerInterceptor(), // add panic recovery
+			grpc_zap.UnaryServerInterceptor(l),     // add log
 		),
 		grpc_middleware.WithStreamServerChain(
 			grpc_recovery.StreamServerInterceptor(), // add panic recovery
