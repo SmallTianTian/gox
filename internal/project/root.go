@@ -24,6 +24,7 @@ var base = []*model.FileTemp{
 	{Name: "pkg/application/app.go", Content: templates.ReadTemplateFile("pkg/application/app.go.tmpl")},
 	{Name: "pkg/logger/logger.go", Content: templates.ReadTemplateFile("pkg/logger/logger.go.tmpl")},
 	{Name: ".gitignore", Content: templates.ReadTemplateFile(".gitignore.tmpl")},
+	{Name: ".golangci.yml", Content: templates.ReadTemplateFile(".golangci.yml.tmpl")},
 	{Name: "Makefile", Content: templates.ReadTemplateFile("Makefile.tmpl")},
 }
 

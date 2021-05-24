@@ -1,0 +1,126 @@
+# [example] https://github.com/golangci/golangci-lint/blob/master/.golangci.example.yml
+
+#分析运行的选项
+run:
+  # 当至少发现一个问题时退出，默认为1
+  issues-exit-code: 0
+
+  # 跳过哪个目录：他们的问题不会被报告;
+  # 可以在这里使用正则： `generated.*`，正则应用于全路径;
+  # 默认值为空列表，但是默认目录被独立跳过从该选项的值(参见skip-dirs-use-default)。
+  # 在 Windows "/" 将被当前操作系统文件路径分隔符替换以正常工作。
+  skip-dirs:
+    - "test"
+
+  # default为true。允许跳过目录:
+  #   vendor$, third_party$, testdata$, examples$, Godeps$, builtin$
+  skip-dirs-use-default: true
+
+  # 要跳过哪些文件:它们将被分析，会产生问题, 但不会被报道。
+  # 默认值为空列表，但有不需要包含所有自动生成的文件，我们很自信地认识到自动生成文件。
+  # 如果不是，请让我们知道。
+  # 在 Windows "/"将被当前操作系统文件路径分隔符替换以正常工作。
+  skip-files:
+    - utils/ast/temp_test.go
+
+# 所有可用的设置特定的 lint
+linters-settings:
+  errcheck:
+    # 报告没有检查类型断言中的错误:' a:= b.(MyStruct) ';
+    check-type-assertions: true
+    # 报告错误赋值给空白标识符:' num， _:= strconv.Atoi(numStr) ';
+    check-blank: true
+
+  gocritic:
+    # 参见 https://github.com/go-critic/go-critic#usage
+    enabled-tags:
+      - diagnostic
+      - style
+      - performance
+    disabled-tags:
+      - experimental
+      - opinionated
+
+linters:
+  disable-all: true
+  enable:
+    #  https://golangci-lint.run/usage/configuration/
+    - bodyclose # http.resp.body 内存泄露检查
+    - deadcode # 无用的变量声明检查
+    - depguard # 自定义依赖包白、黑名单 控制导包
+    - dogsled # 空白标识符的赋值检查  默认为2
+    - dupl # 重复代码检查
+    - errcheck # 未判断的error返回值检查
+    - funlen # 接口最大行数检查
+    # - gochecknoinits # 包中定义init()函数检查
+    - goconst # 常量字符串检查
+    - gocritic #
+    - gocyclo # 代码复杂度检查
+    - gofmt # 优化代码
+    - goimports # 自动增加和删除包
+    - golint # 代码风格检查
+    - gomnd # 参数、赋值、用例、条件、操作和返回语句检查
+    - goprintffuncname #
+    - gosec # 源代码安全检查
+    - gosimple # 可以优化的代码检查 注：该工具已整合到staticcheck中
+    - govet # 代码正确性检查
+    - ineffassign # 无效赋值检查
+    - interfacer # 建议接口的使用方式
+    - lll # 行最大字符
+    - misspell # 拼写错误检查
+    - nakedret # 大于指定函数长度的函数的无约束返回值检查
+    - nolintlint #
+    - rowserrcheck # sql.Rows.Err检查
+    - scopelint # 循环变量引用检查,排除test文件
+    - staticcheck # 静态检查
+    - structcheck # 结构体字段的约束条件检查
+    - stylecheck # 代码风格检查
+    - typecheck # 类型检查
+    - unconvert # 类型转换检查
+    - unparam # 未使用参数检查
+    - unused # 未使用变量、函数检查
+    - varcheck # 报告exported变量和常量
+    - whitespace # 空行检查
+    - exhaustive
+    - noctx
+
+issues:
+  exclude-rules:
+    # 从测试文件中排除一些检查。
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - funlen
+        - goconst
+        - golint
+        - stylecheck
+        - lll
+
+    # 使用go:generate排除长行出现的ll问题
+    - linters:
+        - lll
+      source: "^//go:generate "
+
+severity:
+  # Default value is empty string.
+  # Set the default severity for issues. If severity rules are defined and the issues
+  # do not match or no severity is provided to the rule this will be the default
+  # severity applied. Severities should match the supported severity names of the
+  # selected out format.
+  # - Code climate: https://docs.codeclimate.com/docs/issues#issue-severity
+  # -   Checkstyle: https://checkstyle.sourceforge.io/property_types.html#severity
+  # -       Github: https://help.github.com/en/actions/reference/workflow-commands-for-github-actions#setting-an-error-message
+  default-severity: error
+
+  # Default value is empty list.
+  # When a list of severity rules are provided, severity information will be added to lint
+  # issues. Severity rules have the same filtering capability as exclude rules except you
+  # are allowed to specify one matcher per severity rule.
+  # Only affects out formats that support setting severity information.
+  rules:
+    - linters:
+        - dupl
+      severity: info
