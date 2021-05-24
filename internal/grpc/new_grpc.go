@@ -107,9 +107,20 @@ func withGRPCBufGen() {
 	}
 	if owner = config.DefaultConfig.Project.Owner; owner == "" {
 		owner = name
-		if len(owner) < 4 { // nolint
-			owner += strings.Repeat("-", (4 - len(owner))) // nolint
-		}
+	}
+	// buf 要求 owner 字符在 [4, 32] 之间
+	switch {
+	case len(owner) < 4: // nolint
+		owner += strings.Repeat("-", (4 - len(owner))) // nolint
+	case len(owner) > 32: // nolint
+		owner = owner[:32]
+	}
+	// buf 要求 name 字符在 [2, 32] 之间
+	switch {
+	case len(name) < 2: // nolint
+		name += strings.Repeat("-", (2 - len(name))) // nolint
+	case len(owner) > 32: // nolint
+		name = name[:32]
 	}
 
 	// 不基于 buf.build 的远端就无法运作，所以先写个模板
