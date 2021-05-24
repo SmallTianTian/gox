@@ -24,7 +24,8 @@ type Config struct {
 	Project struct {
 		New    bool   // 是否是新项目
 		Path   string // 项目本地路径
-		Org    string // 项目组织
+		Remote string // 远端地址
+		Owner  string // 项目所有者，可以是 group/user
 		Name   string // 项目名称
 		Vendor bool   // 是否启用 vendor
 	}
@@ -79,16 +80,14 @@ func complementProjectInfo() {
 	}
 	// 当不是 Go 项目，将直接返回
 	if !utils.CheckGoProject(dir) {
-		if DefaultConfig.Project.Org == "" {
-			DefaultConfig.Project.Org = "github.com"
-		}
 		return
 	}
 
-	// Go 目录将获取 go.mod 中组织和项目名。
-	org, pro := utils.GetOrganizationAndProjectName(dir)
-	DefaultConfig.Project.Name = pro
-	DefaultConfig.Project.Org = org
+	// Go 目录将获取 go.mod 中远端、组织和项目名。
+	remote, owner, name := utils.GetRemoteOwnerAndProjectName(dir)
+	DefaultConfig.Project.Name = name
+	DefaultConfig.Project.Remote = remote
+	DefaultConfig.Project.Owner = owner
 	DefaultConfig.Project.New = false
 	DefaultConfig.Project.Vendor = utils.CheckUseVendor(dir)
 

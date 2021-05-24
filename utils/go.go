@@ -10,15 +10,15 @@ import (
 
 // FirstMod 仅在首次创建项目的时候需要执行。
 // 如果有 go.mod 文件，将直接返回.
-func FirstMod(dir, oAp string, vendor bool) bool {
+func FirstMod(dir, ron string, vendor bool) bool {
 	if IsExist(filepath.Join(dir, "go.mod")) {
 		logger.Debug("Has go.mod, DON'T init again.")
 		return true
 	}
 
-	logger.Debugf("Begin exec `go mod init %s` in %s.", oAp, dir)
-	if err := Exec(dir, "go", "mod", "init", oAp); err != nil {
-		logger.Errorf("Go mod init failed.\n Please exec `go mod init %s`.\n Error: %v", oAp, err)
+	logger.Debugf("Begin exec `go mod init %s` in %s.", ron, dir)
+	if err := Exec(dir, "go", "mod", "init", ron); err != nil {
+		logger.Errorf("Go mod init failed.\n Please exec `go mod init %s`.\n Error: %v", ron, err)
 		return false
 	}
 
@@ -89,15 +89,29 @@ func GoWireGen(path string) bool {
 
 // GetOrganizationAndProjectName 从地址中获取组织名和项目名。
 // 只查看 go.mod 文件，不包含任何 go 文件也可正常获取.
-func GetOrganizationAndProjectName(path string) (org, pro string) {
+func GetRemoteOwnerAndProjectName(path string) (remote, owner, name string) {
 	lines := ReadTxtFileEachLine(filepath.Join(path, "go.mod"))
+	var module string
 	for _, line := range lines {
 		if strings.HasPrefix(strings.TrimSpace(line), "module") {
-			oAp := strings.TrimSpace(line)[len("module "):]
-			org = filepath.Dir(oAp)
-			pro = filepath.Base(oAp)
-			return
+			module = strings.TrimSpace(line)[len("module "):]
+			break
 		}
+	}
+
+	switch strings.Count(module, "/") {
+	case 0:
+		name = module
+	case 1:
+		ss := strings.Split(module, "/")
+		remote = ss[0]
+		name = ss[1]
+	default:
+		f := strings.Index(module, "/")
+		l := strings.LastIndex(module, "/")
+		remote = module[:f]
+		owner = module[f+1 : l]
+		name = module[l+1:]
 	}
 	return
 }

@@ -18,7 +18,7 @@ func Test_NewProject(t *testing.T) {
 
 		config.DefaultConfig.Project.Path = dir
 		config.DefaultConfig.Project.Name = "fresh"
-		config.DefaultConfig.Project.Org = "github.com"
+		config.DefaultConfig.Project.Remote = "github.com"
 		config.DefaultConfig.Project.Vendor = false
 
 		Convey("能正常初始化项目", func() {
@@ -34,9 +34,9 @@ func Test_NewProject(t *testing.T) {
 			So(utils.IsExist(mod), ShouldBeTrue)
 			So(utils.IsExist(vendor), ShouldBeFalse)
 
-			org, pro := utils.GetOrganizationAndProjectName(proPath)
-			So(org, ShouldEqual, config.DefaultConfig.Project.Org)
-			So(pro, ShouldEqual, config.DefaultConfig.Project.Name)
+			remote, _, name := utils.GetRemoteOwnerAndProjectName(proPath)
+			So(remote, ShouldEqual, config.DefaultConfig.Project.Remote)
+			So(name, ShouldEqual, config.DefaultConfig.Project.Name)
 
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
@@ -61,9 +61,9 @@ func Test_NewProject(t *testing.T) {
 			So(utils.IsExist(mod), ShouldBeTrue)
 			So(utils.IsExist(vendor), ShouldBeTrue)
 
-			org, pro := utils.GetOrganizationAndProjectName(proPath)
-			So(org, ShouldEqual, config.DefaultConfig.Project.Org)
-			So(pro, ShouldEqual, config.DefaultConfig.Project.Name)
+			remote, _, name := utils.GetRemoteOwnerAndProjectName(proPath)
+			So(remote, ShouldEqual, config.DefaultConfig.Project.Remote)
+			So(name, ShouldEqual, config.DefaultConfig.Project.Name)
 
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
@@ -77,17 +77,13 @@ func Test_NewProject(t *testing.T) {
 			config.DefaultConfig.Project.Vendor = true
 			proPath := filepath.Join(dir, config.DefaultConfig.Project.Name)
 
-			test.InitGoMod("old", "test", proPath)
+			test.InitGoMod("old", "", "test", proPath)
 			mod := filepath.Join(proPath, "go.mod")
 
 			So(utils.IsExist(proPath), ShouldBeTrue)
 			So(utils.IsExist(mod), ShouldBeTrue)
 
 			So(NewProject, ShouldPanic)
-
-			org, pro := utils.GetOrganizationAndProjectName(proPath)
-			So(org, ShouldNotEqual, config.DefaultConfig.Project.Org)
-			So(pro, ShouldNotEqual, config.DefaultConfig.Project.Name)
 		})
 	})
 }

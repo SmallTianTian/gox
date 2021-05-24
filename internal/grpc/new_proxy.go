@@ -34,9 +34,7 @@ func NewProxy(srv, alias string) {
 		// 在 import 处导入新包
 		if strings.HasPrefix(line, "import (") {
 			sb.WriteString(line + "\n")
-			org := config.DefaultConfig.Project.Org
-			name := config.DefaultConfig.Project.Name
-			sb.WriteString(fmt.Sprintf(`%s "%s/%s/api/%s/v1"`, srv, org, name, srv) + "\n")
+			sb.WriteString(fmt.Sprintf(`%s "%s/api/%s/v1"`, srv, config_util.GetModule(config.DefaultConfig), srv) + "\n")
 			continue
 		}
 
@@ -60,12 +58,11 @@ func initProxy() {
 	}
 
 	// 初始化 server/proxy.go
-	mod := filepath.Join(config.DefaultConfig.Project.Org, config.DefaultConfig.Project.Name)
 	base := []*model.FileTemp{
 		{Name: "pkg/application/proxy_server.go", Content: templates.ReadTemplateFile("pkg/application/proxy_server.go.tmpl")},
 		{Name: "internal/server/proxy.go", Content: templates.ReadTemplateFile("internal/server/proxy.go.tmpl")},
 	}
-	utils.WriteByTemplate(dir, map[string]interface{}{"module": mod}, base...)
+	utils.WriteByTemplate(dir, map[string]interface{}{"module": config_util.GetModule(config.DefaultConfig)}, base...)
 
 	// 初始化 application 中的数据
 

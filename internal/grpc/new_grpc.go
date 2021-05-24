@@ -20,7 +20,7 @@ func New(srv string) {
 	f := func() {
 		dir := config.DefaultConfig.Project.Path
 		kRv := map[string]interface{}{
-			"module": filepath.Join(config.DefaultConfig.Project.Org, config.DefaultConfig.Project.Name),
+			"module": config_util.GetModule(config.DefaultConfig),
 		}
 		utils.WriteByTemplate(dir, kRv, optionMap["demo_proto"], optionMap["demo_impl"])
 	}
@@ -32,7 +32,7 @@ func NewDemo() {
 	f := func() {
 		dir := config.DefaultConfig.Project.Path
 		kRv := map[string]interface{}{
-			"module": filepath.Join(config.DefaultConfig.Project.Org, config.DefaultConfig.Project.Name),
+			"module": config_util.GetModule(config.DefaultConfig),
 		}
 		utils.WriteByTemplate(dir, kRv, optionMap["demo_proto"], optionMap["demo_impl"])
 	}
@@ -96,13 +96,33 @@ func withGRPCBufGen() {
 		return
 	}
 	// buf yaml 写入
-	module := filepath.Join(config.DefaultConfig.Project.Org, config.DefaultConfig.Project.Name)
+	var remote, owner, name string
+	name = config.DefaultConfig.Project.Name
+	name = strings.ReplaceAll(name, "_", "-")
+	name = strings.ReplaceAll(name, ".", "-")
+	name = strings.ReplaceAll(name, "/", "-")
+
+	if remote = config.DefaultConfig.Project.Remote; remote == "" {
+		remote = "buf.build"
+	}
+	if owner = config.DefaultConfig.Project.Owner; owner == "" {
+		owner = name
+		if len(owner) < 4 {
+			owner += strings.Repeat("-", (4 - len(owner)))
+		}
+	}
+
 	kRv := map[string]interface{}{
-		"name": strings.ReplaceAll(module, ".", "-"),
+		"name": "buf.build/beta/test",
 	}
 	utils.WriteByTemplate(dir, kRv, optionMap["buf"])
 	// 调用 buf mod update 命令加载其他 proto
 	utils.MustNotError(utils.Exec(dir, "buf", "beta", "mod", "update"))
+
+	kRv = map[string]interface{}{
+		"name": strings.Join([]string{remote, owner, name}, "/"),
+	}
+	utils.WriteByTemplate(dir, kRv, optionMap["buf"])
 	utils.GoBufGen(dir)
 	// 修复 go tidy 最多只拉去 v1.21 版本
 	utils.MustNotError(utils.Exec(dir, "go", "get", "-u", "-v", "google.golang.org/grpc"))
@@ -129,9 +149,7 @@ func setGRPCImplWire(srv, alias string) {
 		// 在 import 处导入新包
 		if strings.HasPrefix(line, "import (") {
 			sb.WriteString(line + "\n")
-			org := config.DefaultConfig.Project.Org
-			name := config.DefaultConfig.Project.Name
-			sb.WriteString(fmt.Sprintf(`%s "%s/%s/api/%s/v1"`, srv, org, name, srv) + "\n")
+			sb.WriteString(fmt.Sprintf(`%s "%s/api/%s/v1"`, srv, config_util.GetModule(config.DefaultConfig), srv) + "\n")
 			continue
 		}
 
@@ -242,10 +260,8 @@ func setHelper() {
 		// 在 import 处导入新包
 		if strings.HasPrefix(line, "import (") {
 			sb.WriteString(line + "\n")
-			org := config.DefaultConfig.Project.Org
-			name := config.DefaultConfig.Project.Name
-			sb.WriteString(fmt.Sprintf(`"%s/%s/internal/server"`, org, name) + "\n")
-			sb.WriteString(fmt.Sprintf(`gc "%s/%s/internal/ui/grpc"`, org, name) + "\n")
+			sb.WriteString(fmt.Sprintf(`"%s/internal/server"`, config_util.GetModule(config.DefaultConfig)) + "\n")
+			sb.WriteString(fmt.Sprintf(`gc "%s/internal/ui/grpc"`, config_util.GetModule(config.DefaultConfig)) + "\n")
 			continue
 		}
 

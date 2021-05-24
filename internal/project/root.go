@@ -9,6 +9,7 @@ import (
 	"github.com/SmallTianTian/fresh-go/model"
 	"github.com/SmallTianTian/fresh-go/pkg/logger"
 	"github.com/SmallTianTian/fresh-go/utils"
+	config_util "github.com/SmallTianTian/fresh-go/utils/config"
 )
 
 var base = []*model.FileTemp{
@@ -41,13 +42,11 @@ func NewProject() {
 		panic("Cloudn't init go project again in" + dir)
 	}
 
-	org := config.DefaultConfig.Project.Org
 	isVendor := config.DefaultConfig.Project.Vendor
-	module := filepath.Join(org, pro)
-	logger.Debugf("Project name: %s\nOrganization: %s\nPath: %s\nUse model: %v.", pro, org, dir, isVendor)
+	logger.Debugf("Module: %s\nPath: %s\nUse model: %v.", config_util.GetModule(config.DefaultConfig), dir, isVendor)
 
 	var kRv = map[string]interface{}{
-		"module": module,
+		"module": config_util.GetModule(config.DefaultConfig),
 		"vendor": isVendor,
 		"name":   pro,
 	}
@@ -77,7 +76,7 @@ func initLog(dir string) {
 func doSomeInit(dir string) {
 	// 初始化 mod
 	utils.FirstMod(config.DefaultConfig.Project.Path,
-		filepath.Join(config.DefaultConfig.Project.Org, config.DefaultConfig.Project.Name),
+		config_util.GetModule(config.DefaultConfig),
 		config.DefaultConfig.Project.Vendor)
 
 	utils.MustNotError(utils.Exec(dir, "wire", "./..."))

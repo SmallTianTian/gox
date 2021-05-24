@@ -19,11 +19,12 @@ func Test_CheckGoProject(t *testing.T) {
 		})
 
 		Convey("正常包含 go.mod 文件", func() {
-			pro := "temp_project"
-			org := "github.com/fresh-go"
+			name := "temp_project"
+			remote := "github.com"
+			owner := "fresh-go"
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
-			test.InitGoMod(org, pro, dir)
+			test.InitGoMod(remote, owner, name, dir)
 
 			exist := utils.CheckGoProject(dir)
 			So(exist, ShouldBeTrue)
@@ -74,38 +75,68 @@ func Test_CheckUseVendor(t *testing.T) {
 	})
 }
 
-func Test_GetOrganizationAndProjectName(t *testing.T) {
+func Test_GetRemoteOwnerAndProjectName(t *testing.T) {
 	Convey("", t, func() {
 		Convey("当前项目", func() {
-			org, pro := utils.GetOrganizationAndProjectName("..")
-			So(org, ShouldEqual, "github.com/SmallTianTian")
-			So(pro, ShouldEqual, "fresh-go")
+			remote, owner, name := utils.GetRemoteOwnerAndProjectName("..")
+			So(remote, ShouldEqual, "github.com")
+			So(owner, ShouldEqual, "SmallTianTian")
+			So(name, ShouldEqual, "fresh-go")
 		})
 		Convey("新建目录，包含 go.mod", func() {
-			e_pro := "temp_project"
-			e_org := "github.com/fresh-go"
+			e_name := "temp_project"
+			e_remote := "github.com"
+			o_owner := "fresh-go"
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
-			test.InitGoMod(e_org, e_pro, dir)
+			test.InitGoMod(e_remote, o_owner, e_name, dir)
 
-			org, pro := utils.GetOrganizationAndProjectName(dir)
-			So(org, ShouldEqual, e_org)
-			So(pro, ShouldEqual, e_pro)
+			remote, owner, name := utils.GetRemoteOwnerAndProjectName(dir)
+			So(remote, ShouldEqual, e_remote)
+			So(owner, ShouldEqual, o_owner)
+			So(name, ShouldEqual, e_name)
+		})
+		Convey("新建目录，没有 owner 包含 go.mod", func() {
+			e_name := "temp_project"
+			e_remote := "github.com"
+			o_owner := ""
+			dir := test.TempDir()
+			defer os.RemoveAll(dir)
+			test.InitGoMod(e_remote, o_owner, e_name, dir)
+
+			remote, owner, name := utils.GetRemoteOwnerAndProjectName(dir)
+			So(remote, ShouldEqual, e_remote)
+			So(owner, ShouldEqual, o_owner)
+			So(name, ShouldEqual, e_name)
+		})
+		Convey("新建目录，包含 go.mod, owner 包含斜杠", func() {
+			e_name := "temp_project"
+			e_remote := "github.com"
+			o_owner := "fresh/go/1/2"
+			dir := test.TempDir()
+			defer os.RemoveAll(dir)
+			test.InitGoMod(e_remote, o_owner, e_name, dir)
+
+			remote, owner, name := utils.GetRemoteOwnerAndProjectName(dir)
+			So(remote, ShouldEqual, e_remote)
+			So(owner, ShouldEqual, o_owner)
+			So(name, ShouldEqual, e_name)
 		})
 		Convey("go.mod 文件不包含任何内容，将返回空字符串", func() {
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
 			test.WriteFile(filepath.Join(dir, "go.mod"), "")
 
-			org, pro := utils.GetOrganizationAndProjectName(dir)
-			So(org, ShouldEqual, "")
-			So(pro, ShouldEqual, "")
+			remote, owner, name := utils.GetRemoteOwnerAndProjectName(dir)
+			So(remote, ShouldEqual, "")
+			So(owner, ShouldEqual, "")
+			So(name, ShouldEqual, "")
 		})
 		Convey("不包含 go.mod 文件，将抛出错误", func() {
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
 
-			So(func() { utils.GetOrganizationAndProjectName(dir) }, ShouldPanic)
+			So(func() { utils.GetRemoteOwnerAndProjectName(dir) }, ShouldPanic)
 		})
 	})
 }
@@ -143,7 +174,7 @@ func Test_GoModRebuild(t *testing.T) {
 		Convey("正常重新整理 mod，不包含 vendor", func() {
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
-			test.InitGoMod("github.com/fresh-go", "test", dir)
+			test.InitGoMod("github.com", "fresh-go", "test", dir)
 			test.WriteFile(filepath.Join(dir, "main.go"), `package main
 			import (
 				"fmt"
@@ -167,7 +198,7 @@ func Test_GoModRebuild(t *testing.T) {
 		Convey("正常重新整理 mod，包含 vendor", func() {
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
-			test.InitGoMod("github.com/fresh-go", "test", dir)
+			test.InitGoMod("github.com", "fresh-go", "test", dir)
 			test.WriteFile(filepath.Join(dir, "main.go"), `package main
 			import (
 				"fmt"
@@ -205,8 +236,9 @@ func Test_GoModRebuild(t *testing.T) {
 func Test_FirstMod(t *testing.T) {
 	Convey("", t, func() {
 		Convey("首次创建 mod，不包含 vendor", func() {
-			pro := "temp_project"
-			org := "github.com/fresh-go"
+			name := "temp_project"
+			remote := "github.com"
+			owner := "fresh-go"
 
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
@@ -217,7 +249,7 @@ func Test_FirstMod(t *testing.T) {
 			So(utils.IsExist(mod), ShouldBeFalse)
 			So(utils.IsExist(vendor), ShouldBeFalse)
 
-			flag := utils.FirstMod(dir, filepath.Join(pro, org), false)
+			flag := utils.FirstMod(dir, filepath.Join(remote, owner, name), false)
 			So(flag, ShouldBeTrue)
 
 			So(utils.IsExist(mod), ShouldBeTrue)
@@ -225,8 +257,9 @@ func Test_FirstMod(t *testing.T) {
 		})
 
 		Convey("首次创建 mod，包含 vendor", func() {
-			pro := "temp_project"
-			org := "github.com/fresh-go"
+			name := "temp_project"
+			remote := "github.com"
+			owner := "fresh-go"
 
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
@@ -237,7 +270,7 @@ func Test_FirstMod(t *testing.T) {
 			So(utils.IsExist(mod), ShouldBeFalse)
 			So(utils.IsExist(vendor), ShouldBeFalse)
 
-			flag := utils.FirstMod(dir, filepath.Join(pro, org), true)
+			flag := utils.FirstMod(dir, filepath.Join(remote, owner, name), true)
 			So(flag, ShouldBeTrue)
 
 			So(utils.IsExist(mod), ShouldBeTrue)
@@ -245,8 +278,9 @@ func Test_FirstMod(t *testing.T) {
 		})
 
 		Convey("首次创建 mod，包含 vendor，不包含任何 go 文件", func() {
-			pro := "temp_project"
-			org := "github.com/fresh-go"
+			name := "temp_project"
+			remote := "github.com"
+			owner := "fresh-go"
 
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
@@ -256,7 +290,7 @@ func Test_FirstMod(t *testing.T) {
 			So(utils.IsExist(mod), ShouldBeFalse)
 			So(utils.IsExist(vendor), ShouldBeFalse)
 
-			flag := utils.FirstMod(dir, filepath.Join(pro, org), true)
+			flag := utils.FirstMod(dir, filepath.Join(remote, owner, name), true)
 			So(flag, ShouldBeTrue)
 
 			So(utils.IsExist(mod), ShouldBeTrue)
@@ -265,29 +299,32 @@ func Test_FirstMod(t *testing.T) {
 		})
 
 		Convey("非首次创建 mod，将不会做任何操作", func() {
-			pro := "temp_project"
-			org := "github.com/fresh-go"
+			name := "temp_project"
+			remote := "github.com"
+			owner := "fresh-go"
 			b_pro := "bad_pro"
 			b_org := "bad_org"
 
 			dir := test.TempDir()
 			defer os.RemoveAll(dir)
-			test.InitGoMod(org, pro, dir)
+			test.InitGoMod(remote, owner, name, dir)
 
 			mod := filepath.Join(dir, "go.mod")
 
 			old, err := ioutil.ReadFile(mod)
 			So(err, ShouldBeNil)
-			So(string(old), ShouldContainSubstring, pro)
-			So(string(old), ShouldContainSubstring, org)
+			So(string(old), ShouldContainSubstring, remote)
+			So(string(old), ShouldContainSubstring, owner)
+			So(string(old), ShouldContainSubstring, name)
 
-			flag := utils.FirstMod(dir, filepath.Join(pro, org), true)
+			flag := utils.FirstMod(dir, filepath.Join(remote, owner, name), true)
 			So(flag, ShouldBeTrue)
 
 			fresh, e := ioutil.ReadFile(mod)
 			So(e, ShouldBeNil)
-			So(string(fresh), ShouldContainSubstring, pro)
-			So(string(fresh), ShouldContainSubstring, org)
+			So(string(fresh), ShouldContainSubstring, remote)
+			So(string(fresh), ShouldContainSubstring, owner)
+			So(string(fresh), ShouldContainSubstring, name)
 			So(string(fresh), ShouldNotContainSubstring, b_pro)
 			So(string(fresh), ShouldNotContainSubstring, b_org)
 		})

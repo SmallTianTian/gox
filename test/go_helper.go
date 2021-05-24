@@ -4,21 +4,29 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/SmallTianTian/fresh-go/utils"
 )
 
 // 初始化 gomod
-func InitGoMod(o, p, dir string) {
+func InitGoMod(remote, owner, name, dir string) {
 	if !utils.IsExist(dir) {
 		utils.MustNotError(os.MkdirAll(dir, os.ModePerm))
 	}
 
+	var mods []string
+	for _, v := range []string{remote, owner, name} {
+		if strings.TrimSpace(v) != "" {
+			mods = append(mods, v)
+		}
+	}
+
 	path := filepath.Join(dir, "go.mod")
 	content := fmt.Sprintf(`
-module %s/%s
+module %s
 
-go 1.15`, o, p)
+go 1.15`, strings.Join(mods, "/"))
 	WriteFile(path, content)
 }
 

@@ -20,7 +20,7 @@ func Test_NewDemo(t *testing.T) {
 		// 准备工作
 		config.DefaultConfig.Project.Path = dir
 		config.DefaultConfig.Project.Name = "fresh"
-		config.DefaultConfig.Project.Org = "github.com"
+		config.DefaultConfig.Project.Remote = "github.com"
 		config.DefaultConfig.Project.Vendor = false
 		path := filepath.Join(config.DefaultConfig.Project.Path, config.DefaultConfig.Project.Name)
 		project.NewProject()
