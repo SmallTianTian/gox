@@ -20,6 +20,7 @@ func readTempAst() (f *ast.File) {
 }
 
 func writeAst(name string, f *ast.File) error {
+	return nil // 需要的时候再打开
 	fset := token.NewFileSet()
 	var output []byte
 	buffer := bytes.NewBuffer(output)
