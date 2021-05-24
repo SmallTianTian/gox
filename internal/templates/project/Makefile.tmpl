@@ -26,7 +26,7 @@ test: check mod
 
 mod:
 	@go mod tidy
-	{{- if .vendor -}}
+	{{if .vendor -}}
 	@go mod vendor
 	{{- end}}
 

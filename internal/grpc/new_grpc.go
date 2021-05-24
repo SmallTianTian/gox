@@ -107,11 +107,12 @@ func withGRPCBufGen() {
 	}
 	if owner = config.DefaultConfig.Project.Owner; owner == "" {
 		owner = name
-		if len(owner) < 4 {
-			owner += strings.Repeat("-", (4 - len(owner)))
+		if len(owner) < 4 { // nolint
+			owner += strings.Repeat("-", (4 - len(owner))) // nolint
 		}
 	}
 
+	// 不基于 buf.build 的远端就无法运作，所以先写个模板
 	kRv := map[string]interface{}{
 		"name": "buf.build/beta/test",
 	}
@@ -119,6 +120,7 @@ func withGRPCBufGen() {
 	// 调用 buf mod update 命令加载其他 proto
 	utils.MustNotError(utils.Exec(dir, "buf", "beta", "mod", "update"))
 
+	// 这里才是真正的 name
 	kRv = map[string]interface{}{
 		"name": strings.Join([]string{remote, owner, name}, "/"),
 	}
@@ -128,7 +130,7 @@ func withGRPCBufGen() {
 	utils.MustNotError(utils.Exec(dir, "go", "get", "-u", "-v", "google.golang.org/grpc"))
 }
 
-func setGRPCImplWire(srv, alias string) {
+func setGRPCImplWire(srv, alias string) { // nolint
 	if alias == "" {
 		alias = srv
 	}
@@ -162,7 +164,11 @@ func setGRPCImplWire(srv, alias string) {
 
 			// 继续写新的 Provider
 			tmp := `var %sProvider = wire.NewSet(NewV1%sService, wire.Bind(new(%s.%sServiceServer), new(*V1%sService)))`
-			sb.WriteString(fmt.Sprintf(tmp, srv, utils.FirstUp(srv), srv, utils.FirstUp(alias), utils.FirstUp(srv)) + "\n")
+			varLine := fmt.Sprintf(tmp, srv, utils.FirstUp(srv), srv, utils.FirstUp(alias), utils.FirstUp(srv))
+			if len(strings.TrimSpace(varLine)) > 120 { // nolint
+				varLine += " //nolint"
+			}
+			sb.WriteString(varLine + "\n")
 			continue
 		}
 
@@ -293,7 +299,7 @@ func setHelper() {
 		// 在 NewApplication 加入对应的参数
 		tmp := "func NewApplication("
 		if strings.HasPrefix(line, tmp) {
-			sb.WriteString(tmp + "gc *grpc.Server, " + line[len(tmp):] + "\n")
+			sb.WriteString(tmp + "gc *grpc.Server, \n" + line[len(tmp):] + "\n")
 			continue
 		}
 
