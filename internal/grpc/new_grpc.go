@@ -70,6 +70,7 @@ var optionMap = map[string]*model.FileTemp{
 	"demo_impl":   {Name: "internal/ui/grpc/helloworld_v1.go", Content: templates.ReadTemplateFile("internal/ui/grpc/helloworld_v1.go.tmpl")}, // nolint
 	"buf":         {Name: "buf.yaml", Content: templates.ReadTemplateFile("buf.yaml.tmpl")},                                                   // nolint
 	"buf_gen":     {Name: "buf.gen.yaml", Content: templates.ReadTemplateFile("buf.gen.yaml.tmpl")},                                           // nolint
+	"cert_sh":     {Name: "scripts/create-cert.sh", Content: templates.ReadTemplateFile("scripts/create-cert.sh.tmpl")},
 }
 
 func existGRPC(pro string) bool {
@@ -216,6 +217,9 @@ func setGRPCServer() {
 	// write grpc.go
 	utils.WriteByTemplate(dir, nil, optionMap["grpc_server"])
 
+	// add create cert shell
+	utils.WriteByTemplate(dir, nil, optionMap["cert_sh"])
+
 	// write wire.go
 	wirePath := filepath.Join(config.DefaultConfig.Project.Path, "internal", "server", "wire.go")
 	// 如果不存在 wire 文件，先创建 wire
@@ -258,6 +262,11 @@ func setHelper() {
 
 	config_util.WriteConfig(dir, "grpc", 50051, []string{"port"})
 	ast_util.AddField2AstFile(fga, "GRPC", "int", []string{"Config", "Port"})
+
+	ast_util.AddField2AstFile(fga, "ServerKey", "string", []string{"Config", "Certificate"})
+	ast_util.AddField2AstFile(fga, "ServerCert", "string", []string{"Config", "Certificate"})
+	config_util.WriteConfig(dir, "serverkey", "", []string{"certificate"})
+	config_util.WriteConfig(dir, "servercert", "", []string{"certificate"})
 
 	utils.WriteAstFile(pg, "", fga)
 
@@ -317,9 +326,9 @@ func setHelper() {
 		if strings.Contains(line, "return application.NewApplication") {
 			if line[len(line)-1] != '.' {
 				sb.WriteString(line + ".\n")
-				sb.WriteString("WithGRPC(gc, config.Port.GRPC)\n")
+				sb.WriteString("WithGRPC(gc, config.Port.GRPC, config.Certificate.ServerCert, config.Certificate.ServerKey)\n")
 			} else {
-				sb.WriteString("WithGRPC(gc, config.Port.GRPC).\n")
+				sb.WriteString("WithGRPC(gc, config.Port.GRPC, config.Certificate.ServerCert, config.Certificate.ServerKey).\n")
 			}
 			continue
 		}

@@ -115,9 +115,9 @@ func initProxy() {
 			sb.WriteString(line + "\n")
 			if line[len(line)-1] != '.' {
 				sb.WriteString(line + ".\n")
-				sb.WriteString("WithProxy(proxyMux, config.Port.Proxy)\n")
+				sb.WriteString("WithProxy(proxyMux, config.Port.Proxy, config.Certificate.ServerCert, config.Certificate.ServerKey)\n")
 			} else {
-				sb.WriteString("WithProxy(proxyMux, config.Port.Proxy).\n")
+				sb.WriteString("WithProxy(proxyMux, config.Port.Proxy, config.Certificate.ServerCert, config.Certificate.ServerKey).\n")
 			}
 			continue
 		}

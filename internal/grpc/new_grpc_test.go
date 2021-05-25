@@ -33,6 +33,7 @@ func Test_NewDemo(t *testing.T) {
 			grpcServerPath := filepath.Join(path, "internal", "server", "grpc.go")
 			bufPath := filepath.Join(path, "buf.yaml")
 			bufGenPath := filepath.Join(path, "buf.gen.yaml")
+			certSh := filepath.Join(path, "scripts", "create-cert.sh")
 
 			So(utils.IsExist(demoPath), ShouldBeFalse)
 			So(utils.IsExist(demoImplPath), ShouldBeFalse)
@@ -41,6 +42,7 @@ func Test_NewDemo(t *testing.T) {
 			So(utils.IsExist(grpcServerPath), ShouldBeFalse)
 			So(utils.IsExist(bufPath), ShouldBeFalse)
 			So(utils.IsExist(bufGenPath), ShouldBeFalse)
+			So(utils.IsExist(certSh), ShouldBeFalse)
 
 			NewDemo()
 
@@ -51,6 +53,7 @@ func Test_NewDemo(t *testing.T) {
 			So(utils.IsExist(grpcServerPath), ShouldBeTrue)
 			So(utils.IsExist(bufPath), ShouldBeTrue)
 			So(utils.IsExist(bufGenPath), ShouldBeTrue)
+			So(utils.IsExist(certSh), ShouldBeTrue)
 			utils.Exec(path, "go", "mod", "tidy")
 			So(utils.Exec(path, "go", "vet", "./..."), ShouldEqual, nil)
 		})

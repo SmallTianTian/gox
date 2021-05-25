@@ -8,6 +8,8 @@ import (
 	"{{.module}}/pkg/logger"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/protobuf/encoding/protojson"
 )
 
 func registEachProxy(ctx context.Context, mux *runtime.ServeMux, port string, opts []grpc.DialOption) []error {
@@ -16,9 +18,29 @@ func registEachProxy(ctx context.Context, mux *runtime.ServeMux, port string, op
 }
 
 func GetProxy(config *conf.Config) *runtime.ServeMux {
-	mux := runtime.NewServeMux()
-	opts := []grpc.DialOption{
-		grpc.WithInsecure(),
+	mux := runtime.NewServeMux(
+		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
+			MarshalOptions: protojson.MarshalOptions{
+				EmitUnpopulated: true,
+				UseEnumNumbers:  true,
+				UseProtoNames:   true,
+			},
+			UnmarshalOptions: protojson.UnmarshalOptions{
+				DiscardUnknown: true,
+			},
+		}),
+	)
+
+	var opts []grpc.DialOption
+
+	if config.Certificate.ServerCert != "" && config.Certificate.ServerKey != "" {
+		dcreds, err := credentials.NewClientTLSFromFile(config.Certificate.ServerCert, "")
+		if err != nil {
+			logger.Fatal("Init server cret failed.", err)
+		}
+		opts = append(opts, grpc.WithTransportCredentials(dcreds))
+	} else {
+		opts = append(opts, grpc.WithInsecure())
 	}
 
 	grpcPort := fmt.Sprintf(":%d", config.Port.GRPC)

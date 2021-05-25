@@ -10,27 +10,34 @@ import (
 )
 
 //nolint: interfacer
-func (app *Application) WithProxy(r *runtime.ServeMux, port int) *Application { // 强制需要这个类型，用来区分 http
-	app.appSrvs = append(app.appSrvs, newProxyServer(r, port))
+func (app *Application) WithProxy(r *runtime.ServeMux, port int, cert, certKey string) *Application { // 强制需要这个类型，用来区分 http
+	app.appSrvs = append(app.appSrvs, newProxyServer(r, port, cert, certKey))
 	return app
 }
 
 type proxyServer struct {
 	hs *http.Server
+	cert, certKey string
 }
 
-func newProxyServer(proxyMux http.Handler, port int) *proxyServer {
+func newProxyServer(proxyMux http.Handler, port int, cert, certKey string) *proxyServer {
 	hs := &http.Server{
 		Addr:    fmt.Sprintf(":%d", port),
 		Handler: proxyMux,
 	}
 	return &proxyServer{
 		hs: hs,
+		cert:    cert,
+		certKey: certKey,
 	}
 }
 
 func (ps *proxyServer) Run(ctx context.Context, log *zap.Logger) error {
-	log.Info("Grpc proxy start.", zap.String("addr", ps.hs.Addr))
+	if ps.cert != "" && ps.certKey != "" {
+		log.Info("Grpc proxy start with https.", zap.String("addr", ps.hs.Addr))
+		return ps.hs.ListenAndServeTLS("configs/server.crt", "configs/server.key")
+	}
+	log.Info("Grpc proxy start without https.", zap.String("addr", ps.hs.Addr))
 	return ps.hs.ListenAndServe()
 }
 

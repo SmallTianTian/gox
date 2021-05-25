@@ -2,6 +2,7 @@ package application
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
 
@@ -9,20 +10,23 @@ import (
 	"google.golang.org/grpc"
 )
 
-func (app *Application) WithGRPC(gs *grpc.Server, port int) *Application {
-	app.appSrvs = append(app.appSrvs, newGRPCServer(gs, port))
+func (app *Application) WithGRPC(gs *grpc.Server, port int, cert, certKey string) *Application {
+	app.appSrvs = append(app.appSrvs, newGRPCServer(gs, port, cert, certKey))
 	return app
 }
 
 type grpcServer struct {
 	gc   *grpc.Server
 	addr string
+	cert, certKey string
 }
 
-func newGRPCServer(gc *grpc.Server, port int) *grpcServer {
+func newGRPCServer(gc *grpc.Server, port int, cert, certKey string) *grpcServer {
 	return &grpcServer{
-		gc:   gc,
-		addr: fmt.Sprintf(":%d", port),
+		gc:      gc,
+		addr:    fmt.Sprintf(":%d", port),
+		cert:    cert,
+		certKey: certKey,
 	}
 }
 
@@ -31,7 +35,21 @@ func (gs *grpcServer) Run(ctx context.Context, log *zap.Logger) error {
 	if err != nil {
 		return err
 	}
-	log.Info("Grpc start.", zap.String("addr", gs.addr))
+
+	if gs.cert != "" && gs.certKey != "" {
+		cert, err := tls.LoadX509KeyPair(gs.cert, gs.certKey)
+		if err != nil {
+			return err
+		}
+		lis = tls.NewListener(lis, &tls.Config{
+			Certificates: []tls.Certificate{cert},
+			MinVersion:   tls.VersionTLS12,
+		})
+		log.Info("Grpc start with tls.", zap.String("addr", gs.addr))
+	} else {
+		log.Info("Grpc start without tls.", zap.String("addr", gs.addr))
+	}
+
 	return gs.gc.Serve(lis)
 }
 
