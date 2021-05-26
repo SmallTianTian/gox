@@ -20,7 +20,7 @@ func main() {
 	// 1. 初始化配置文件
 	config := conf.InitConfig()
 	// 2. 初始化日志
-	log := logger.InitZap(config.Logger.App, config.Logger.Level)
+	log := logger.InitZap(config.Logger.App, config.Logger.Level, config.Logger.Path)
 	// 3. 打印版本信息
 	printVerion(log)
 

@@ -8,12 +8,12 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func InitLogger(app, logLevel string) {
-	InitZap(app, logLevel)
+func InitLogger(app, logLevel, path string) {
+	InitZap(app, logLevel, path)
 }
 
 // InitZap init zap as instance.
-func InitZap(app, logLevel string) *zap.Logger {
+func InitZap(app, logLevel, path string) *zap.Logger {
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -33,9 +33,18 @@ func InitZap(app, logLevel string) *zap.Logger {
 		log.Println("Error parsing log level, using: info")
 	}
 
+	writer := os.Stdout
+	if path != "" {
+		f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
+		if err != nil {
+			log.Fatalln("Open log file failed.", err)
+		}
+		writer = f
+	}
+
 	core := zapcore.NewCore(
 		zapcore.NewJSONEncoder(encoderConfig),
-		zapcore.AddSync(os.Stdout),
+		zapcore.AddSync(writer),
 		l,
 	)
 
