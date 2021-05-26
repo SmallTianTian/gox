@@ -16,6 +16,7 @@ var base = []*model.FileTemp{
 	{Name: "cmd/server/main.go", Content: templates.ReadTemplateFile("cmd/server/main.go.tmpl")},
 	{Name: "cmd/server/wire.go", Content: templates.ReadTemplateFile("cmd/server/wire.go.tmpl")},
 	{Name: "configs/config.yaml", Content: templates.ReadTemplateFile("configs/config.yaml.tmpl")},
+	{Name: "configs/config.yaml.example", Content: templates.ReadTemplateFile("configs/config.yaml.example.tmpl")},
 	{Name: "githooks/commit-msg", Content: templates.ReadTemplateFile("githooks/commit-msg")},
 	{Name: "githooks/go_pre_commit.sh", Content: templates.ReadTemplateFile("githooks/go_pre_commit.sh")},
 	{Name: "githooks/pre-commit", Content: templates.ReadTemplateFile("githooks/pre-commit")},
@@ -23,6 +24,9 @@ var base = []*model.FileTemp{
 	{Name: "pkg/application/app_server.go", Content: templates.ReadTemplateFile("pkg/application/app_server.go.tmpl")}, // nolint
 	{Name: "pkg/application/app.go", Content: templates.ReadTemplateFile("pkg/application/app.go.tmpl")},
 	{Name: "pkg/logger/logger.go", Content: templates.ReadTemplateFile("pkg/logger/logger.go.tmpl")},
+	{Name: "pkg/errors/errors.go", Content: templates.ReadTemplateFile("pkg/errors/errors.go.tmpl")},
+	{Name: "pkg/errors/groups.go", Content: templates.ReadTemplateFile("pkg/errors/groups.go.tmpl")},
+	{Name: "pkg/errors/handle.go", Content: templates.ReadTemplateFile("pkg/errors/handle.go.tmpl")},
 	{Name: ".gitignore", Content: templates.ReadTemplateFile(".gitignore.tmpl")},
 	{Name: ".golangci.yml", Content: templates.ReadTemplateFile(".golangci.yml.tmpl")},
 	{Name: "Makefile", Content: templates.ReadTemplateFile("Makefile.tmpl")},

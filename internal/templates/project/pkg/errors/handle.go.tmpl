@@ -1,0 +1,23 @@
+package errors
+
+import (
+	"context"
+	"net/http"
+
+	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"google.golang.org/grpc/grpclog"
+)
+
+// GRPCHandler GRPC v2 版本的错误处理
+func GRPCHandler() runtime.ServeMuxOption {
+	return runtime.WithErrorHandler(func(ctx context.Context, mux *runtime.ServeMux, m runtime.Marshaler, pw http.ResponseWriter, req *http.Request, err error) {
+		if err == nil {
+			return
+		}
+
+		eMsg := FromError(err).Error()
+		if _, e := pw.Write([]byte(eMsg)); e != nil {
+			grpclog.Infof("Failed to write response: %v", e)
+		}
+	})
+}

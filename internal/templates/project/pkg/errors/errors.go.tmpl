@@ -1,0 +1,180 @@
+package errors
+
+import (
+	"encoding/json"
+	"fmt"
+	"strings"
+
+	"google.golang.org/genproto/googleapis/rpc/errdetails"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/runtime/protoiface"
+)
+
+type Error struct {
+	code    int
+	message string
+	details []string
+
+	action string
+	reason string
+	cause  error
+}
+
+// FromError 返回一个 Error 错误。
+// 1. 如果错误是 Error 实例，则直接返回
+// 2. 如果错误是 grpc status 实例，则解析返回
+// 3. 如果都不是，则返回未知错误，并将错误进行嵌套
+func FromError(err error) *Error {
+	if e, ok := err.(*Error); ok {
+		return e
+	}
+	if ge, ok := err.(grpcError); ok {
+		return FromGRPCStatus(ge.GRPCStatus())
+	}
+
+	return &Error{
+		code:    int(codes.Unknown),
+		message: "Unknow",
+		cause:   err,
+	}
+}
+
+// FromGRPCStatus 将 GRPCStatus 转为 Error
+func FromGRPCStatus(status *status.Status) *Error {
+	e := &Error{
+		code:    int(status.Code()),
+		message: status.Message(),
+	}
+
+	for _, v := range status.Details() {
+		switch rv := v.(type) {
+		case *errdetails.ErrorInfo:
+			e.action = rv.Domain
+			e.reason = rv.Reason
+		case *errdetails.DebugInfo:
+			e.details = append(e.details, rv.Detail)
+		}
+	}
+	return e
+}
+
+// New 新创建一个错误
+// code：错误码；
+// message：错误消息；
+func New(code int, message string) *Error {
+	return &Error{
+		code:    code,
+		message: message,
+	}
+}
+
+// NewE 新创建一个错误，同时将老错误嵌套在内。
+// code：错误码；
+// message：错误消息；
+// err：老错误；
+func NewE(code int, message string, err error) *Error {
+	return &Error{
+		code:    code,
+		message: message,
+		cause:   err,
+	}
+}
+
+// Error 实现 error 接口
+func (e *Error) Error() string {
+	const temp = `{"Code":%d,"Message":"%s","Action":"%s","Reason":"%s","Details":[%s],"CauseError":"%s"}`
+	ceMsg := ""
+	if e.cause != nil {
+		ceMsg = e.cause.Error()
+	}
+
+	return fmt.Sprintf(temp, e.code, e.message, e.action, e.reason, strings.Join(e.details, ","), ceMsg)
+}
+
+// Unwrap 获取被嵌套的错误
+func (e *Error) Unwrap() error {
+	return e.cause
+}
+
+// GRPCStatus 用于 grpc 错误的传递。
+// 嵌套的错误将不会传递。
+func (e *Error) GRPCStatus() *status.Status {
+	s := status.New(codes.Code(e.code), e.message)
+
+	mDetails := []protoiface.MessageV1{&errdetails.ErrorInfo{Domain: e.action, Reason: e.reason}}
+	for _, d := range e.details {
+		mDetails = append(mDetails, &errdetails.DebugInfo{Detail: d})
+	}
+
+	ns, err := s.WithDetails(mDetails...)
+	if err != nil {
+		return s
+	}
+	return ns
+}
+
+// Withcode 设置状态码。
+// 返回自身，便于链式调用
+func (e *Error) Withcode(code int) *Error {
+	e.code = code
+	return e
+}
+
+// WithMessage 设置状态码。
+// 返回自身，便于链式调用
+func (e *Error) WithMessage(message string) *Error {
+	e.message = message
+	return e
+}
+
+// WithAction 设置操作指令。
+// 返回自身，便于链式调用
+func (e *Error) WithAction(action string) *Error {
+	e.action = action
+	return e
+}
+
+// WithReason 设置错误原因。
+// 返回自身，便于链式调用
+func (e *Error) WithReason(reason string) *Error {
+	e.reason = reason
+	return e
+}
+
+// WithCause 设置嵌套的错误。
+// 返回自身，便于链式调用
+func (e *Error) WithCause(cause error) *Error {
+	e.cause = cause
+	return e
+}
+
+// AddDetails 添加错误明细，便于记录详细信息。
+// 明细将被 json.Marshal 成字符串，如果序列化过程中有错误，将返回错误。
+// 针对 nil、string、error 有特殊处理。
+func (e *Error) AddDetails(details ...interface{}) error {
+	for _, detail := range details {
+		var ds string
+		switch rd := detail.(type) {
+		case nil:
+			ds = ""
+		case string:
+			ds = rd
+		case error:
+			ds = rd.Error()
+		default:
+			bs, err := json.Marshal(rd)
+			if err != nil {
+				return err
+			}
+			ds = string(bs)
+		}
+		e.details = append(e.details, ds)
+	}
+	return e
+}
+
+// grpc 错误的接口
+type grpcError interface {
+	GRPCStatus() *status.Status
+}

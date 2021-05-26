@@ -6,6 +6,7 @@ import (
 
 	"{{.module}}/internal/conf"
 	"{{.module}}/pkg/logger"
+	"{{.module}}/pkg/errors"
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -19,6 +20,7 @@ func registEachProxy(ctx context.Context, mux *runtime.ServeMux, port string, op
 
 func GetProxy(config *conf.Config) *runtime.ServeMux {
 	mux := runtime.NewServeMux(
+		errors.GRPCHandler(),
 		runtime.WithMarshalerOption(runtime.MIMEWildcard, &runtime.JSONPb{
 			MarshalOptions: protojson.MarshalOptions{
 				EmitUnpopulated: true,

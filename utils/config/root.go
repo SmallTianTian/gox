@@ -7,7 +7,8 @@ import (
 )
 
 var configs = map[string]func(content []byte, k string, v interface{}, father []string) []byte{
-	"configs/config.yaml": yaml,
+	"configs/config.yaml.example": yaml,
+	"configs/config.yaml":         yaml,
 }
 
 func WriteConfig(path, k string, v interface{}, father []string) {

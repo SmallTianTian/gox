@@ -1,0 +1,31 @@
+package errors
+
+type Group struct {
+	code    int
+	message string
+	errs    []error
+}
+
+func NewGroup(code int, message string) *Group {
+	return &Group{code: code, message: message}
+}
+
+func (g *Group) Add(e error) {
+	if g == nil {
+		*g = Group{}
+	}
+	if e != nil {
+		g.errs = append(g.errs, e)
+	}
+}
+
+func (g *Group) Err() error {
+	if len(g.errs) == 0 {
+		return nil
+	}
+	err := New(g.code, g.message)
+	for _, e := range g.errs {
+		err.AddDetails(e) // nolint, no error
+	}
+	return err
+}
