@@ -9,7 +9,7 @@ import (
 	"go.uber.org/zap"
 )
 
-//nolint: interfacer
+//nolint
 func (app *Application) WithProxy(r *runtime.ServeMux, port int, cert, certKey string) *Application { // 强制需要这个类型，用来区分 http
 	app.appSrvs = append(app.appSrvs, newProxyServer(r, port, cert, certKey))
 	return app

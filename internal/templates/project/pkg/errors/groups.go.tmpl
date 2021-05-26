@@ -25,7 +25,8 @@ func (g *Group) Err() error {
 	}
 	err := New(g.code, g.message)
 	for _, e := range g.errs {
-		err.AddDetails(e) // nolint, no error
+		// nolint
+		err.AddDetails(e) // no error
 	}
 	return err
 }

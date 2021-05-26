@@ -10,7 +10,11 @@ import (
 
 // GRPCHandler GRPC v2 版本的错误处理
 func GRPCHandler() runtime.ServeMuxOption {
-	return runtime.WithErrorHandler(func(ctx context.Context, mux *runtime.ServeMux, m runtime.Marshaler, pw http.ResponseWriter, req *http.Request, err error) {
+	return runtime.WithErrorHandler(
+		func(
+			ctx context.Context, mux *runtime.ServeMux,
+			m runtime.Marshaler, pw http.ResponseWriter,
+			req *http.Request, err error) {
 		if err == nil {
 			return
 		}
