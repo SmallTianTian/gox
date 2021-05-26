@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package api.{{.serviceName}}.v1;
+
+option go_package = "api/{{.serviceName}}/v1";
+
+service {{.upServiceName}}Service {
+    rpc Create{{.upServiceName}} (Create{{.upServiceName}}Request) returns (Create{{.upServiceName}}Response);
+    rpc Update{{.upServiceName}} (Update{{.upServiceName}}Request) returns (Update{{.upServiceName}}Response);
+    rpc Delete{{.upServiceName}} (Delete{{.upServiceName}}Request) returns (Delete{{.upServiceName}}Response);
+    rpc Get{{.upServiceName}} (Get{{.upServiceName}}Request) returns (Get{{.upServiceName}}Response);
+    rpc List{{.upServiceName}} (List{{.upServiceName}}Request) returns (List{{.upServiceName}}Response);
+}
+
+message Create{{.upServiceName}}Request {}
+message Create{{.upServiceName}}Response {}
+
+message Update{{.upServiceName}}Request {}
+message Update{{.upServiceName}}Response {}
+
+message Delete{{.upServiceName}}Request {}
+message Delete{{.upServiceName}}Response {}
+
+message Get{{.upServiceName}}Request {}
+message Get{{.upServiceName}}Response {}
+
+message List{{.upServiceName}}Request {}
+message List{{.upServiceName}}Response {}

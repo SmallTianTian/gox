@@ -1,6 +1,7 @@
 package grpc
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -54,6 +55,67 @@ func Test_NewDemo(t *testing.T) {
 			So(utils.IsExist(bufPath), ShouldBeTrue)
 			So(utils.IsExist(bufGenPath), ShouldBeTrue)
 			So(utils.IsExist(certSh), ShouldBeTrue)
+			utils.Exec(path, "go", "mod", "tidy")
+			So(utils.Exec(path, "go", "vet", "./..."), ShouldEqual, nil)
+		})
+
+		Convey("能直接新建正常", func() {
+			userPath := filepath.Join(path, "api", "user", "v1")
+			userImplPath := filepath.Join(path, "internal", "ui", "grpc", "user_v1.go")
+			grpcWirePath := filepath.Join(path, "internal", "ui", "grpc", "wire.go")
+			serverWirePath := filepath.Join(path, "internal", "server", "wire.go")
+			grpcServerPath := filepath.Join(path, "internal", "server", "grpc.go")
+			bufPath := filepath.Join(path, "buf.yaml")
+			bufGenPath := filepath.Join(path, "buf.gen.yaml")
+			certSh := filepath.Join(path, "scripts", "create-cert.sh")
+
+			So(utils.IsExist(userPath), ShouldBeFalse)
+			So(utils.IsExist(userImplPath), ShouldBeFalse)
+			So(utils.IsExist(grpcWirePath), ShouldBeFalse)
+			So(utils.IsExist(serverWirePath), ShouldBeFalse)
+			So(utils.IsExist(grpcServerPath), ShouldBeFalse)
+			So(utils.IsExist(bufPath), ShouldBeFalse)
+			So(utils.IsExist(bufGenPath), ShouldBeFalse)
+			So(utils.IsExist(certSh), ShouldBeFalse)
+
+			New("user")
+
+			So(utils.IsExist(userPath), ShouldBeTrue)
+			So(utils.IsExist(userImplPath), ShouldBeTrue)
+			So(utils.IsExist(grpcWirePath), ShouldBeTrue)
+			So(utils.IsExist(serverWirePath), ShouldBeTrue)
+			So(utils.IsExist(grpcServerPath), ShouldBeTrue)
+			So(utils.IsExist(bufPath), ShouldBeTrue)
+			So(utils.IsExist(bufGenPath), ShouldBeTrue)
+			So(utils.IsExist(certSh), ShouldBeTrue)
+			utils.Exec(path, "go", "mod", "tidy")
+			So(utils.Exec(path, "go", "vet", "./..."), ShouldEqual, nil)
+		})
+
+		Convey("能多次新建", func() {
+			pkgs := []string{"user", "people", "table", "book", "mac"}
+
+			var paths []string
+			for _, v := range pkgs {
+				paths = append(paths, filepath.Join(path, "api", v, "v1"))
+				paths = append(paths, filepath.Join(path, "internal", "ui", "grpc", fmt.Sprintf("%s_v1.go", v)))
+			}
+
+			// 检查目录不存在
+			for _, path := range paths {
+				So(utils.IsExist(path), ShouldBeFalse)
+			}
+
+			// 新建服务
+			for _, pkg := range pkgs {
+				New(pkg)
+			}
+
+			// 检查目录不存在
+			for _, path := range paths {
+				So(utils.IsExist(path), ShouldBeTrue)
+			}
+
 			utils.Exec(path, "go", "mod", "tidy")
 			So(utils.Exec(path, "go", "vet", "./..."), ShouldEqual, nil)
 		})

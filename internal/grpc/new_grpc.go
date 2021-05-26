@@ -15,14 +15,26 @@ import (
 )
 
 // New 新建一个 GRPC 文件
-// TODO
 func New(srv string) {
 	f := func() {
 		dir := config.DefaultConfig.Project.Path
 		kRv := map[string]interface{}{
-			"module": config_util.GetModule(config.DefaultConfig),
+			"module":        config_util.GetModule(config.DefaultConfig),
+			"serviceName":   srv,
+			"upServiceName": utils.FirstUp(srv),
 		}
-		utils.WriteByTemplate(dir, kRv, optionMap["demo_proto"], optionMap["demo_impl"])
+		proto := &model.FileTemp{Name: fmt.Sprintf("api/%s/v1/%[1]s.proto", srv)}
+		if config.DefaultConfig.FrameEnable.Proxy {
+			proto.Content = templates.ReadTemplateFile("api/tmp/v1/tmp.proto.tmpl")
+		} else {
+			proto.Content = templates.ReadTemplateFile("api/tmp/v1/tmp_without_gw.proto.tmpl")
+		}
+		impl := &model.FileTemp{
+			Name:    fmt.Sprintf("internal/ui/grpc/%s_v1.go", srv),
+			Content: templates.ReadTemplateFile("internal/ui/grpc/tmp.go.tmpl"),
+		}
+
+		utils.WriteByTemplate(dir, kRv, proto, impl)
 	}
 	baseGRPCnew(srv, srv, f)
 }
@@ -84,7 +96,7 @@ func protoPath(pro string) string {
 func withGRPCBufGen() {
 	dir := config.DefaultConfig.Project.Path
 	// 最终调用 buf 生成代码
-	// defer utils.MustNotError(utils.Exec(dir, "buf", "generate"))
+	defer utils.GoBufGen(dir)
 
 	// buf gen yaml 写入
 	bufGenPath := filepath.Join(dir, "buf.gen.yaml")
@@ -137,7 +149,6 @@ func withGRPCBufGen() {
 		"name": strings.Join([]string{remote, owner, name}, "/"),
 	}
 	utils.WriteByTemplate(dir, kRv, optionMap["buf"])
-	utils.GoBufGen(dir)
 	// 修复 go tidy 最多只拉去 v1.21 版本
 	utils.MustNotError(utils.Exec(dir, "go", "get", "-u", "-v", "google.golang.org/grpc"))
 }
@@ -187,14 +198,15 @@ func setGRPCImplWire(srv, alias string) { // nolint
 		// 在 RegistGRPCS 中注册
 		const rgstr = "func RegistGRPCS("
 		if strings.HasPrefix(line, rgstr) {
-			sb.WriteString(rgstr)
-			sb.WriteString(fmt.Sprintf("%sS %s.%sServiceServer, ", srv, srv, utils.FirstUp(alias)))
+			sb.WriteString(rgstr + "\n")
+			sb.WriteString(fmt.Sprintf("%sS %s.%sServiceServer,", srv, srv, utils.FirstUp(alias)))
 			sb.WriteString(line[len(rgstr):] + "\n")
+			continue
+		}
 
-			// 写入下一行
-			i++
-			sb.WriteString(lines[i] + "\n")
-
+		const retstr = "return func(sr grpc.ServiceRegistrar) {"
+		if strings.Contains(line, retstr) {
+			sb.WriteString(retstr + "\n")
 			// 写入注册信息
 			tmp := `%s.Register%sServiceServer(sr, %sS)`
 			sb.WriteString(fmt.Sprintf(tmp, srv, utils.FirstUp(alias), srv) + "\n")

@@ -1,0 +1,63 @@
+syntax = "proto3";
+
+package api.{{.serviceName}}.v1;
+
+option go_package = "api/{{.serviceName}}/v1";
+
+import "google/api/annotations.proto";
+
+service {{.upServiceName}}Service {
+    rpc Create{{.upServiceName}} (Create{{.upServiceName}}Request) returns (Create{{.upServiceName}}Response) {
+        option (google.api.http) = {
+            post: "/v1/{{.serviceName}}"
+            body: "*"
+        };
+    }
+
+    rpc Update{{.upServiceName}} (Update{{.upServiceName}}Request) returns (Update{{.upServiceName}}Response) {
+        option (google.api.http) = {
+            put: "/v1/{{.serviceName}}/{id}"
+            body: "*"
+        };
+    }
+
+    rpc Delete{{.upServiceName}} (Delete{{.upServiceName}}Request) returns (Delete{{.upServiceName}}Response) {
+        option (google.api.http) = {
+            delete: "/v1/{{.serviceName}}/{id}"
+        };
+    }
+
+    rpc Get{{.upServiceName}} (Get{{.upServiceName}}Request) returns (Get{{.upServiceName}}Response) {
+        option (google.api.http) = {
+            get: "/v1/{{.serviceName}}/{id}"
+        };
+    }
+
+    rpc List{{.upServiceName}} (List{{.upServiceName}}Request) returns (List{{.upServiceName}}Response) {
+        option (google.api.http) = {
+            get: "/v1/{{.serviceName}}"
+        };
+    }
+}
+
+message Create{{.upServiceName}}Request {}
+message Create{{.upServiceName}}Response {}
+
+message Update{{.upServiceName}}Request {
+    uint64 id   = 1;
+    string name = 2;
+}
+message Update{{.upServiceName}}Response {}
+
+message Delete{{.upServiceName}}Request {
+    uint64 id = 1;
+}
+message Delete{{.upServiceName}}Response {}
+
+message Get{{.upServiceName}}Request {
+    uint64 id = 1;
+}
+message Get{{.upServiceName}}Response {}
+
+message List{{.upServiceName}}Request {}
+message List{{.upServiceName}}Response {}

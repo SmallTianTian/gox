@@ -1,0 +1,36 @@
+package grpc
+
+import (
+	"context"
+
+	pb "{{.module}}/api/{{.serviceName}}/v1"
+	"{{.module}}/pkg/errors"
+)
+
+type V1{{.upServiceName}}Service struct {
+	pb.Unimplemented{{.upServiceName}}ServiceServer
+}
+
+func NewV1{{.upServiceName}}Service() *V1{{.upServiceName}}Service {
+	return &V1{{.upServiceName}}Service{}
+}
+
+func (s *V1{{.upServiceName}}Service) Create{{.upServiceName}}(ctx context.Context, req *pb.Create{{.upServiceName}}Request) (*pb.Create{{.upServiceName}}Response, error) {
+	return nil, errors.New(1, "NOT SUPPORT.")
+}
+
+func (s *V1{{.upServiceName}}Service) Update{{.upServiceName}}(ctx context.Context, req *pb.Update{{.upServiceName}}Request) (*pb.Update{{.upServiceName}}Response, error) {
+	return nil, errors.New(1, "NOT SUPPORT.")
+}
+
+func (s *V1{{.upServiceName}}Service) Delete{{.upServiceName}}(ctx context.Context, req *pb.Delete{{.upServiceName}}Request) (*pb.Delete{{.upServiceName}}Response, error) {
+	return nil, errors.New(1, "NOT SUPPORT.")
+}
+
+func (s *V1{{.upServiceName}}Service) Get{{.upServiceName}}(ctx context.Context, req *pb.Get{{.upServiceName}}Request) (*pb.Get{{.upServiceName}}Response, error) {
+	return nil, errors.New(1, "NOT SUPPORT.")
+}
+
+func (s *V1{{.upServiceName}}Service) List{{.upServiceName}}(ctx context.Context, req *pb.List{{.upServiceName}}Request) (*pb.List{{.upServiceName}}Response, error) {
+	return nil, errors.New(1, "NOT SUPPORT.")
+}
