@@ -3,10 +3,10 @@ package application
 import (
 	"context"
 
-	"go.uber.org/zap"
+	"{{.module}}/pkg/logger"
 )
 
 type AppServer interface {
-	Run(ctx context.Context, log *zap.Logger) error
-	Stop(ctx context.Context, log *zap.Logger)
+	Run(ctx context.Context, log logger.Logger) error
+	Stop(ctx context.Context, log logger.Logger)
 }

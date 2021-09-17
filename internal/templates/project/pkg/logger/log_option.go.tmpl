@@ -1,0 +1,58 @@
+package logger
+
+type logOptions struct {
+	logFilePath   string
+	replaceGlobal bool
+}
+
+// defaultLogOptions 默认的日志可选项
+func defaultLogOptions() logOptions {
+	return logOptions{
+		replaceGlobal: true,
+	}
+}
+
+// LogOption 定义日志可选项接口
+type LogOption interface {
+	apply(*logOptions)
+}
+
+type funcFileOption struct {
+	f func(*logOptions)
+}
+
+func (fdo *funcFileOption) apply(do *logOptions) {
+	fdo.f(do)
+}
+
+func newFuncFileOption(f func(*logOptions)) *funcFileOption {
+	return &funcFileOption{
+		f: f,
+	}
+}
+
+// WithLogFilePath 设置日志文件输出地址，默认输出的 STD(标准输出)
+//
+// 适用日志框架：
+//    - zap
+//    - logrus
+func WithLogFilePath(file string) LogOption {
+	return newFuncFileOption(func(o *logOptions) {
+		o.logFilePath = file
+	})
+}
+
+// NotReplaceGlobal 不替换全局日志
+// 使用 logger.Get() 默认获取最近一次初始化的日志。
+//
+// 如果你项目中存在多次初始化日志、初始化不同日志，
+// 请注意是否需要替换日志。
+//
+// 适用日志框架：
+//    - zap
+//    - logrus
+func NotReplaceGlobal() LogOption {
+	return newFuncFileOption(func(o *logOptions) {
+		o.replaceGlobal = false
+	})
+}

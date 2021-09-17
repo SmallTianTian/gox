@@ -1,38 +1,17 @@
-VERSION=$(shell git describe --tags --always)
-{{if .vendor -}}
-GO_FLAGS= -mod vendor -ldflags "-w -s -X 'main.Version=$(VERSION)' -X 'main.BuildTime=`date "+%Y-%m-%d %H:%M:%S"`' -X 'main.GoVersion=`go version`' -X 'main.GitRevision=`git rev-parse HEAD`'"
-{{- else -}}
-GO_FLAGS= -ldflags "-w -s -X 'main.Version=$(VERSION)' -X 'main.BuildTime=`date "+%Y-%m-%d %H:%M:%S"`' -X 'main.GoVersion=`go version`' -X 'main.GitRevision=`git rev-parse HEAD`'"
-{{- end}}
+VERSION=0.0
+GO_FLAGS= -ldflags "-w -s -X 'main.Version=$(VERSION)' -X 'main.BuildTime=`date "+%Y-%m-%d %H:%M:%S"`' -X 'main.GoVersion=`go version`' -X 'main.GitRevision=no git'"
 
-.PHONY: build check clean test mod tidy run
+.PHONY: build check clean test run
 
 build: test clean
 	@go build $(GO_FLAGS) -o ./bin/ ./...
-
-tidy: generate mod
-	@gofmt -s -w .
 
 check:
 	@go vet ./...
 	@golangci-lint run
 
-test: check mod
-	{{ if .vendor -}}
-	@go test -mod vendor -cover ./...
-	{{- else -}}
+test: check
 	@go test -cover ./...
-	{{- end}}
-
-mod:
-	@go mod tidy
-	{{if .vendor -}}
-	@go mod vendor
-	{{- end}}
-
-generate:
-	@wire ./...
-	@go generate ./...
 
 run: build
 	@bin/server

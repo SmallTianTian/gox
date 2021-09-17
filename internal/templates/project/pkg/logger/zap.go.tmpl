@@ -8,12 +8,13 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func InitLogger(app, logLevel, path string) {
-	InitZap(app, logLevel, path)
-}
-
 // InitZap init zap as instance.
-func InitZap(app, logLevel, path string) *zap.Logger {
+func InitZap(app, logLevel string, opts ...LogOption) *zap.Logger {
+	opt := defaultLogOptions()
+	for _, o := range opts {
+		o.apply(&opt)
+	}
+
 	encoderConfig := zapcore.EncoderConfig{
 		TimeKey:        "time",
 		LevelKey:       "level",
@@ -34,8 +35,8 @@ func InitZap(app, logLevel, path string) *zap.Logger {
 	}
 
 	writer := os.Stdout
-	if path != "" {
-		f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
+	if opt.logFilePath != "" {
+		f, err := os.OpenFile(opt.logFilePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644) // nolint
 		if err != nil {
 			log.Fatalln("Open log file failed.", err)
 		}
@@ -49,6 +50,10 @@ func InitZap(app, logLevel, path string) *zap.Logger {
 	)
 
 	log := zap.New(core).With(zap.String("app", app))
-	instance = log.Sugar()
+	zap.ReplaceGlobals(log)
+
+	if opt.replaceGlobal {
+		instance = log.Sugar()
+	}
 	return log
 }

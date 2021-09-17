@@ -1,18 +1,17 @@
 package cmd
 
 import (
-	"github.com/SmallTianTian/fresh-go/config"
-	"github.com/SmallTianTian/fresh-go/pkg/logger"
-	"github.com/SmallTianTian/fresh-go/utils"
 	"github.com/spf13/cobra"
+	"tianxu.xin/gox/internal/config"
+	"tianxu.xin/gox/pkg/logger"
 )
 
 var (
-	commands = []*cobra.Command{versionCmd, newCmd, doctorCmd, initCmd, apiCmd}
+	commands = []*cobra.Command{versionCmd, newCmd}
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "fresh-go",
+	Use:   "gox",
 	Short: "",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return cmd.Help()
@@ -27,10 +26,6 @@ func Execute() {
 }
 
 func init() {
-	cobra.OnInitialize(func() {
-		logger.InitLogger(config.DefaultConfig.Logger.Level)
-	})
-
 	initDebug()
 	initRegister()
 }
@@ -51,16 +46,8 @@ func initDebug() {
 	}
 }
 
-// 最初的工作准备
-func prepare() {
+func setDebug(conf *config.Config) {
 	if debug {
-		logger.InitLogger("debug")
+		conf.Logger.Level = "debug"
 	}
-}
-
-// 最后的整理工作
-func finally() {
-	dir := config.DefaultConfig.Project.Path
-	utils.GoModRebuild(dir)
-	utils.GoFmtCode(dir)
 }

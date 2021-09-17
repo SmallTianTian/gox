@@ -6,14 +6,10 @@ import (
 	"strings"
 
 	"github.com/spf13/viper"
+	"{{.module}}/pkg/logger"
 )
 
 type Config struct {
-	Logger struct {
-		App   string
-		Level string // 日志级别
-		Path  string // 日志输出文件
-	}
 }
 
 // InitConfig 初始化本地配置文件。
@@ -42,7 +38,7 @@ func InitConfig() *Config {
 	if err := viper.Unmarshal(&conf); err != nil {
 		log.Fatalf("Unmarshal config failed. ERR: %v", err)
 	}
-	log.Println("Use config:", viper.ConfigFileUsed())
+	logger.Get().Info("Use config:", viper.ConfigFileUsed())
 
 	return &conf
 }

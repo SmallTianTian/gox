@@ -13,44 +13,24 @@ type Logger interface {
 	Warnf(template string, args ...interface{})
 }
 
-var instance Logger
+// NoopLog 空实现，避免没有日志实例时 panic
+type NoopLog struct{}
 
-func Debug(args ...interface{}) {
-	instance.Debug(args...)
-}
+func (nl *NoopLog) Debug(args ...interface{})                   {}
+func (nl *NoopLog) Debugf(template string, args ...interface{}) {}
+func (nl *NoopLog) Error(args ...interface{})                   {}
+func (nl *NoopLog) Errorf(template string, args ...interface{}) {}
+func (nl *NoopLog) Fatal(args ...interface{})                   {}
+func (nl *NoopLog) Fatalf(template string, args ...interface{}) {}
+func (nl *NoopLog) Info(args ...interface{})                    {}
+func (nl *NoopLog) Infof(template string, args ...interface{})  {}
+func (nl *NoopLog) Warn(args ...interface{})                    {}
+func (nl *NoopLog) Warnf(template string, args ...interface{})  {}
 
-func Debugf(template string, args ...interface{}) {
-	instance.Debugf(template, args...)
-}
+// instance 默认实现，都是空实现，不包含任何打印操作
+var instance Logger = &NoopLog{}
 
-func Error(args ...interface{}) {
-	instance.Error(args...)
-}
-
-func Errorf(template string, args ...interface{}) {
-	instance.Errorf(template, args...)
-}
-
-func Fatal(args ...interface{}) {
-	instance.Fatal(args...)
-}
-
-func Fatalf(template string, args ...interface{}) {
-	instance.Fatalf(template, args...)
-}
-
-func Info(args ...interface{}) {
-	instance.Info(args...)
-}
-
-func Infof(template string, args ...interface{}) {
-	instance.Infof(template, args...)
-}
-
-func Warn(args ...interface{}) {
-	instance.Warn(args...)
-}
-
-func Warnf(template string, args ...interface{}) {
-	instance.Warnf(template, args...)
+// 获取当前日志实例
+func Get() Logger {
+	return instance
 }

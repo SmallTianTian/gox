@@ -8,32 +8,35 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func InitLogger(app, logLevel string) {
-	InitLogrus(app, logLevel)
-}
-
 // InitLogrus init logrus as instance.
-func InitLogrus(app, logLevel string) *logrus.Entry {
-	logEntry := logrus.New()
+func InitLogrus(app, logLevel string, opts ...LogOption) *logrus.Entry {
+	opt := defaultLogOptions()
+	for _, o := range opts {
+		o.apply(&opt)
+	}
+
 	level, err := logrus.ParseLevel(logLevel)
 	if err != nil {
 		log.Println("Error parsing log level, using: info")
 		level = logrus.InfoLevel
 	}
-	logEntry.Level = level
+	logrus.SetLevel(level)
 
-	if path != "" {
-		f, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
+	if opt.logFilePath != "" {
+		f, err := os.OpenFile(opt.logFilePath, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644) // nolint
 		if err != nil {
 			log.Fatalln("Open log file failed.", err)
 		}
-		logEntry.SetOutput(f)
+		logrus.SetOutput(f)
 	}
 
-	Formatter := new(logrus.JSONFormatter)
-	Formatter.TimestampFormat = time.RFC3339
-	logEntry.SetFormatter(Formatter)
-	log := logEntry.WithField("app", app)
-	instance = log
+	format := new(logrus.JSONFormatter)
+	format.TimestampFormat = time.RFC3339
+	logrus.SetFormatter(format)
+
+	log := logrus.StandardLogger().WithField("app", app)
+	if opt.replaceGlobal {
+		instance = log
+	}
 	return log
 }

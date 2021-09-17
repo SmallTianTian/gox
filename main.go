@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/SmallTianTian/fresh-go/cmd"
+	"tianxu.xin/gox/cmd"
 )
 
 var (

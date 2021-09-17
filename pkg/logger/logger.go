@@ -61,8 +61,9 @@ func Warnf(template string, args ...interface{}) {
 	instance.Warnf(template, args...)
 }
 
-func InitLogger(logLevel string) {
+func InitLogger(logLevel string) Logger {
 	initLogrus(logLevel)
+	return instance
 }
 
 func initLogrus(logLevel string) {

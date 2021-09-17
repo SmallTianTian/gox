@@ -8,23 +8,20 @@ import (
 	"os/signal"
 	"syscall"
 
-	"go.uber.org/zap"
+	"{{.module}}/pkg/logger"
 )
 
 type Application struct {
-	log     *zap.Logger
+	log     logger.Logger
 	ctx     context.Context
 	runErrC chan error
 
 	appSrvs []AppServer
 }
 
-func NewApplication(ctx context.Context, log *zap.Logger) *Application {
+func NewApplication(ctx context.Context, log logger.Logger) *Application {
 	if ctx == nil {
 		ctx = context.Background()
-	}
-	if log == nil {
-		log = zap.NewNop()
 	}
 
 	return &Application{

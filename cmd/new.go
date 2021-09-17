@@ -1,10 +1,28 @@
 package cmd
 
 import (
-	"github.com/SmallTianTian/fresh-go/config"
-	"github.com/SmallTianTian/fresh-go/internal/grpc"
-	"github.com/SmallTianTian/fresh-go/internal/project"
+	"path/filepath"
+	"strings"
+
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
+	"tianxu.xin/gox/internal/config"
+	"tianxu.xin/gox/internal/util"
+	"tianxu.xin/gox/task"
+	"tianxu.xin/gox/task/env"
+	"tianxu.xin/gox/task/env/log"
+	"tianxu.xin/gox/task/env/mod"
+	"tianxu.xin/gox/task/git"
+)
+
+var (
+	ProjectPath string
+	Module      string
+	ModulePre   string
+	Vendor      bool
+	NoGit       bool
+	Log         string
+	OpenDebug   bool
 )
 
 var newCmd = &cobra.Command{
@@ -12,48 +30,81 @@ var newCmd = &cobra.Command{
 	Short: "创建一个新的项目。",
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		prepare()
+		conf := config.GetDefaultConfig()
+		setDebug(conf)
 
-		newProject(args[0])
+		// 设置项目地址
+		var pp string
+		if pp = ProjectPath; pp == "" {
+			pp = conf.GoEnv.Dir
+		}
+		pp = filepath.Join(pp, args[0])
+		t := task.New(conf, pp)
 
-		finally()
+		addNewTask(conf, t, args[0])
+
+		t.AppendChildTask(mod.NewGoModInitTask())
+		// 按需添加 vendor 任务
+		if Vendor || conf.GoEnv.Vendor {
+			t.AppendChildTask(mod.NewGoModVendorTask())
+		}
+
+		err := t.Exec()
+		util.MustNotError(err)
+
+		util.GoFmtCode(pp)
 	},
 }
 
 func init() {
-	newCmd.PersistentFlags().StringVarP(&config.DefaultConfig.Project.Path, "project_path", "p",
-		config.DefaultConfig.Project.Path, "设置该项目创建的路径，归功于 go.mod，我们可以在任何地方创建项目。")
-	newCmd.PersistentFlags().StringVar(&config.DefaultConfig.Project.Remote, "remote",
-		config.DefaultConfig.Project.Remote, "项目的 remote，将在初始化 go.mod 的时候将其写入，并在导入本项目代码中体现。示例：github.com")
-	newCmd.PersistentFlags().StringVar(&config.DefaultConfig.Project.Owner, "owner",
-		config.DefaultConfig.Project.Owner, "项目的 owner，将在初始化 go.mod 的时候将其写入，并在导入本项目代码中体现。")
-	newCmd.PersistentFlags().BoolVar(&config.DefaultConfig.Project.Vendor, "vendor", false, "是否使用 vendor，不推荐。")
-
-	newCmd.PersistentFlags().BoolVar(
-		&config.DefaultConfig.FrameEnable.HTTP, "http", true,
-		"项目是否提供 HTTP 服务，默认开启。如需关闭，请使用 --http=false")
-	newCmd.PersistentFlags().BoolVar(
-		&config.DefaultConfig.FrameEnable.GRPC, "grpc", true,
-		"项目是否提供 GRPC 服务，默认开启。如需关闭，请使用 --grpc=false")
-	newCmd.PersistentFlags().BoolVar(
-		&config.DefaultConfig.FrameEnable.Proxy, "proxy", true,
-		"项目是否提供 GRPC Proxy 服务，默认开启。如需关闭，请使用 --proxy=false，注意，grpc 关闭后，proxy 也无法开启。")
-
-	newCmd.PersistentFlags().StringVar(&config.DefaultConfig.Adapter.Logger, "log", "zap",
-		"目前支持的日志框架：zap、logrus，可以使用小写的框架名来指定使用的日志框架。")
+	newRegist(newCmd.Flags())
 }
 
-func newProject(name string) {
-	// 设置项目名称
-	config.DefaultConfig.Project.Name = name
+func newRegist(fs *pflag.FlagSet) {
+	fs.StringVarP(&ProjectPath, "path", "p", "", "设置该项目创建的路径，归功于 go.mod，我们可以在任何地方创建项目。")
+	fs.StringVar(&Module, "module", "", "项目的 module，将在初始化 go.mod 的时候将其写入。")
+	fs.StringVar(&ModulePre, "module_pre", "", "module 的前缀，拼接项目名称作为 module。如果已设置 module，本参数将失效。")
+	fs.BoolVar(&Vendor, "vendor", false, "使用 vendor，不推荐。")
+	fs.BoolVar(&NoGit, "no_git", false, "不初始化 git，不推荐。")
+	fs.StringVar(&Log, "log", "", "选择日志框架，默认 zap。目前支持：zap、logrus")
+}
 
-	project.NewProject()
+func addNewTask(conf *config.Config, t *task.GoXRootTask, projectName string) {
+	var module string
+	var logT config.LogType
 
-	if config.DefaultConfig.FrameEnable.GRPC {
-		grpc.NewDemo()
-
-		if config.DefaultConfig.FrameEnable.Proxy {
-			grpc.NewDemoProxy()
+	// 设置 config 中的 module
+	if module = Module; module == "" {
+		var pre string
+		if pre = ModulePre; pre == "" {
+			pre = conf.GoEnv.ModulePre
 		}
+		module = filepath.Join(pre, projectName)
+	}
+	conf.GoEnv.Module = module
+
+	// 添加新建新项目的任务
+	t.AppendChildTask(env.NewFreshProjectTask())
+
+	// 添加日志任务
+	switch strings.ToLower(Log) {
+	case string(config.LogrusLog):
+		logT = config.LogrusLog
+	case string(config.ZapLog):
+		logT = config.ZapLog
+	}
+	if logT == "" {
+		logT = conf.GoEnv.Logger
+	}
+	switch logT {
+	case config.LogrusLog:
+		t.AppendChildTask(log.NewLogrusTask())
+	case config.ZapLog:
+		t.AppendChildTask(log.NewZapTask())
+	}
+
+	// 按需添加 git 任务
+	if !(NoGit || conf.GoEnv.NoGit) {
+		t.AppendChildTask(git.NewInitTask())
 	}
 }
